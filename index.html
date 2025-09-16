@@ -312,16 +312,20 @@ var p3 = document.getElementById('p3');
 /* 演出トグル */
 var fxToggle = document.getElementById('fxToggle');
 var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var effectsEnabled = true;
+var effectsEnabled = false; // 初期は未チェック（オフ）
 try{
-  var savedFx = localStorage.getItem('effectsEnabled');
-  if (savedFx === null){
-    effectsEnabled = !prefersReducedMotion; // 既定はreduce指定ならオフ
-  } else {
-    effectsEnabled = savedFx === '1';
-  }
-}catch(_){ effectsEnabled = !prefersReducedMotion; }
-if (fxToggle){ fxToggle.checked = !!effectsEnabled; }
+var savedFx = localStorage.getItem('effectsEnabled');
+if (savedFx === null){
+effectsEnabled = false; // 既定は常にオフ（未チェック）
+} else {
+effectsEnabled = savedFx === '1';
+}
+}catch(_){
+effectsEnabled = false; // 例外時もオフ
+}
+if (fxToggle){
+fxToggle.checked = !!effectsEnabled;
+}
 function isMotionOk(){ return effectsEnabled && !prefersReducedMotion; }
 if (fxToggle){
   fxToggle.addEventListener('change', function(){
@@ -531,7 +535,31 @@ function setPopupBtnText(){
 }
 function openPopup(){
   if (isPopupOpen()){ popupWin.focus(); return; }
-  popupWin = window.open('', 'timer_popup', 'width=280,height=200,menubar=0,toolbar=0,location=0,status=0,resizable=1');
+  // 追加: ウィンドウサイズ
+var w = 280, h = 200;
+
+// 追加: 画面の右上座標を計算（OSのメニューバー等を考慮して avail を優先）
+var s = window.screen || {};
+var availLeft = (typeof s.availLeft === 'number') ? s.availLeft : 0;
+var availTop = (typeof s.availTop === 'number') ? s.availTop : 0;
+var availWidth = (typeof s.availWidth === 'number') ? s.availWidth : (s.width || 0);
+var left = availLeft + Math.max(0, availWidth - w);
+var top = availTop;
+
+// ここを差し替え
+popupWin = window.open(
+'',
+'timer_popup',
+'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',menubar=0,toolbar=0,location=0,status=0,resizable=1'
+);
+
+if (!popupWin){
+alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。');
+return;
+}
+
+// 追加: 一部ブラウザが features の位置指定を無視する場合に備え、moveTo でフォロー
+try { popupWin.moveTo(left, top); } catch (_) {}
   if (!popupWin){ alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。'); return; }
 
   popupWin.document.write(
