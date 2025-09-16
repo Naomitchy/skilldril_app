@@ -5,685 +5,672 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Coaching スキルドリルアプリ</title>
 <style>
-  :root{
-    --bg:#ffffff;
-    --ink:#1f2937;
-    --muted:#6b7280;
-    --border:#e5e7eb;
-    --accent:#3b82f6;
-    --accent-2:#10b981;
-    --card:#ffffff;
-    --shadow:0 10px 24px rgba(0,0,0,.06);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
-  }
-  .container{ max-width:1000px; margin:0 auto; padding:24px 16px 48px }
-  header{ display:flex; align-items:flex-start; gap:12px; margin-bottom:16px }
-  .logo{
-    width:42px; height:42px; border-radius:10px;
-    background:linear-gradient(135deg,var(--accent),#60a5fa);
-    display:grid; place-items:center; color:#fff; font-weight:900; box-shadow:var(--shadow);
-  }
-  h1{ font-size:22px; margin:0 }
-  .note{ color:var(--muted); margin:4px 0 0; font-size:13px }
+:root{
+  --bg:#ffffff; --ink:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+  --accent:#3b82f6; --accent-2:#10b981; --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+}
+.container{ max-width:1000px; margin:0 auto; padding:24px 16px 48px }
+header{ display:flex; align-items:flex-start; gap:12px; margin-bottom:16px }
+.logo{
+  width:42px; height:42px; border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#60a5fa);
+  display:grid; place-items:center; color:#fff; font-weight:900; box-shadow:var(--shadow);
+}
+h1{ font-size:22px; margin:0 }
+.note{ color:var(--muted); margin:4px 0 0; font-size:13px }
 
-  .panel{
-    background:var(--card); border:1px solid var(--border);
-    border-radius:16px; padding:16px; box-shadow:var(--shadow); margin-bottom:16px;
-  }
+.panel{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:16px; box-shadow:var(--shadow); margin-bottom:16px;
+}
 
-  .grid{ display:grid; grid-template-columns: repeat(3, minmax(180px,1fr)); gap:12px }
-  .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px 6px }
-  .field input{
-    width:100%; padding:12px 14px; background:#fff; color:var(--ink);
-    border:1px solid var(--border); border-radius:12px; outline:none;
-    transition:border .15s, box-shadow .15s, transform .06s;
-  }
-  .field input:focus{
-    border-color:var(--accent);
-    box-shadow:0 0 0 4px rgba(59,130,246,.16);
-    transform: translateY(-1px);
-  }
+.grid{ display:grid; grid-template-columns: repeat(3, minmax(180px,1fr)); gap:12px }
+.field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px 6px }
+.field input{
+  width:100%; padding:12px 14px; background:#fff; color:var(--ink);
+  border:1px solid var(--border); border-radius:12px; outline:none;
+  transition:border .15s, box-shadow .15s, transform .06s;
+}
+.field input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px rgba(59,130,246,.16);
+  transform: translateY(-1px);
+}
 
-  .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
-  button{
-    appearance:none; border:none; cursor:pointer;
-    padding:12px 16px; border-radius:12px; font-size:15px; font-weight:600;
-    transition: transform .06s ease, filter .15s ease, background .2s, box-shadow .2s, opacity .2s;
-  }
-  .primary{
-    color:#fff; background:linear-gradient(135deg,var(--accent),#60a5fa);
-    box-shadow:0 12px 28px rgba(59,130,246,.24), inset 0 -2px 0 rgba(0,0,0,.06);
-  }
-  .secondary{
-    color:var(--ink); background:#fff; border:1px solid var(--border);
-  }
-  .ghost{
-    color:var(--muted); background:#fff; border:1px dashed var(--border);
-  }
+.buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
+button{
+  appearance:none; border:none; cursor:pointer;
+  padding:12px 16px; border-radius:12px; font-size:15px; font-weight:600;
+  transition: transform .06s ease, filter .15s ease, background .2s, box-shadow .2s, opacity .2s;
+}
+.primary{
+  color:#fff; background:linear-gradient(135deg,var(--accent),#60a5fa);
+  box-shadow:0 12px 28px rgba(59,130,246,.24), inset 0 -2px 0 rgba(0,0,0,.06);
+}
+.secondary{
+  color:var(--ink); background:#fff; border:1px solid var(--border);
+}
+.ghost{
+  color:var(--muted); background:#fff; border:1px dashed var(--border);
+}
 
-  .error{
-    color:#b00020; background:#fff5f6; border:1px solid #ffd8dd;
-    padding:10px 12px; border-radius:12px; font-size:13px; margin-top:12px; display:none;
-  }
+.error{
+  color:#b00020; background:#fff5f6; border:1px solid #ffd8dd;
+  padding:10px 12px; border-radius:12px; font-size:13px; margin-top:12px; display:none;
+}
 
-  .results{
-    display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap:14px;
-  }
-  .round{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:14px;
-    box-shadow:var(--shadow);
-    min-height:164px;
-  }
-  .round h3{
-    margin:0 0 10px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--muted);
-  }
-  .badge{
-    color:#064e3b; background:linear-gradient(135deg,var(--accent-2),#34d399);
-    padding:2px 10px; border-radius:999px; font-weight:800; font-size:12px;
-  }
-  .assign{ display:grid; gap:10px }
-  .role{
-    display:flex; align-items:center; gap:12px;
-    padding:12px; border-radius:12px; background:#ffffff; border:1px solid var(--border);
-    position:relative; overflow:hidden;
-  }
-  .tag{
-    min-width:94px; text-align:center; color:#fff;
-    background:linear-gradient(135deg,var(--accent),#60a5fa);
-    border-radius:999px; font-size:12px; font-weight:800; padding:4px 10px;
-  }
-  .name{ font-size:16px; font-weight:700; letter-spacing:.02em }
-  .placeholder{ color:var(--muted); font-weight:500; letter-spacing:.08em }
-  .reveal{ animation: pop .22s ease-out forwards; transform:scale(.98); opacity:0 }
-  @keyframes pop{ to{ transform:scale(1); opacity:1 } }
+.results{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap:14px;
+}
+.round{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:var(--shadow);
+  min-height:164px;
+}
+.round h3{
+  margin:0 0 10px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--muted);
+}
+.badge{
+  color:#064e3b; background:linear-gradient(135deg,var(--accent-2),#34d399);
+  padding:2px 10px; border-radius:999px; font-weight:800; font-size:12px;
+}
+.assign{ display:grid; gap:10px }
+.role{
+  display:flex; align-items:center; gap:12px;
+  padding:12px; border-radius:12px; background:#ffffff; border:1px solid var(--border);
+  position:relative; overflow:hidden;
+}
+.tag{
+  min-width:94px; text-align:center; color:#fff;
+  background:linear-gradient(135deg,var(--accent),#60a5fa);
+  border-radius:999px; font-size:12px; font-weight:800; padding:4px 10px;
+}
+.name{ font-size:16px; font-weight:700; letter-spacing:.02em }
+.placeholder{ color:var(--muted); font-weight:500; letter-spacing:.08em }
+.reveal{ animation: pop .22s ease-out forwards; transform:scale(.98); opacity:0 }
+@keyframes pop{ to{ transform:scale(1); opacity:1 } }
 
-  /* タイマー（ページ最下部） */
-  .timer-wrap{ display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
-  .timer-face{
-    min-width:220px; padding:12px 16px; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:var(--shadow);
-  }
-  .time{
-    font-variant-numeric: tabular-nums; font-size:40px; font-weight:800; letter-spacing:.03em; text-align:center; color:var(--ink);
-  }
-  .time.ended{ color:#ef4444 }
-  .timer-face.ended{ border-color:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.15); animation:pulse 900ms ease-out 2 }
-  @keyframes pulse{ 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
-  .timer-sub{ text-align:center; color:var(--muted); font-size:12px; margin-top:4px }
-  .round-nav{ display:flex; gap:8px; align-items:center }
-  .round-label{ font-size:14px; color:var(--muted) }
-  .preset-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-  .custom-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px }
-  .num{ width:84px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px }
-  .grow{ flex:1 1 auto }
+/* タイマー（ページ最下部） */
+.timer-wrap{ display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+.timer-face{
+  min-width:220px; padding:12px 16px; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:var(--shadow);
+}
+.time{
+  font-variant-numeric: tabular-nums; font-size:40px; font-weight:800; letter-spacing:.03em; text-align:center; color:var(--ink);
+}
+.time.ended{ color:#ef4444 }
+.timer-face.ended{ border-color:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.15); animation:pulse 900ms ease-out 2 }
+@keyframes pulse{ 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+.timer-sub{ text-align:center; color:var(--muted); font-size:12px; margin-top:4px }
+.round-nav{ display:flex; gap:8px; align-items:center }
+.round-label{ font-size:14px; color:var(--muted) }
+.preset-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+.custom-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px }
+.num{ width:84px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px }
+.grow{ flex:1 1 auto }
 
-  .footer{
-    color:var(--muted); font-size:12px; margin-top:18px;
-    display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-    border-top:1px solid var(--border); padding-top:12px;
-  }
-  .license{
-    padding:6px 10px; border-radius:10px; border:1px dashed var(--border); background:#fafafa;
-  }
+.footer{
+  color:var(--muted); font-size:12px; margin-top:18px;
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+  border-top:1px solid var(--border); padding-top:12px;
+}
+.license{
+  padding:6px 10px; border-radius:10px; border:1px dashed var(--border); background:#fafafa;
+}
 
-  /* 合意オーバーレイ（固定文・OKで開始） */
-  .overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,.5);
-    display:flex; align-items:center; justify-content:center; padding:16px; z-index:50;
-  }
-  .dialog{
-    max-width:780px; width:100%;
-    background:#fff; color:var(--ink); border-radius:16px; border:1px solid var(--border);
-    box-shadow:0 20px 40px rgba(0,0,0,.25);
-    padding:16px;
-  }
-  .dialog h2{ margin:0 0 8px; font-size:18px }
-  .dialog p{ margin:6px 0; color:#374151; line-height:1.6 }
-  .bullet{ margin:8px 0 0 0; padding-left:18px; color:#374151 }
-  .bullet li{ margin:6px 0 }
-  .dialog .buttons{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap }
-  @media (max-width:720px){ .grid{ grid-template-columns: 1fr } }
+/* 合意オーバーレイ（固定文・OKで開始） */
+.overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.5);
+  display:flex; align-items:center; justify-content:center; padding:16px; z-index:50;
+}
+.dialog{
+  max-width:780px; width:100%;
+  background:#fff; color:var(--ink); border-radius:16px; border:1px solid var(--border);
+  box-shadow:0 20px 40px rgba(0,0,0,.25);
+  padding:16px;
+}
+.dialog h2{ margin:0 0 8px; font-size:18px }
+.dialog p{ margin:6px 0; color:#374151; line-height:1.6 }
+.bullet{ margin:8px 0 0 0; padding-left:18px; color:#374151 }
+.bullet li{ margin:6px 0 }
+.dialog .buttons{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap }
+@media (max-width:720px){ .grid{ grid-template-columns: 1fr } }
 </style>
 </head>
 <body>
-  <!-- 合意（守秘・学びと実験・共に創る）-->
-  <div id="consentOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
-    <div class="dialog">
-      <h2 id="consentTitle">合意の確認</h2>
-      <p>本アプリは、コーチングのスキルドリルを「効率的に・遊び心をもって」行うための場づくりを支援します。安心・安全な学びのため、以下に同意のうえ開始してください。</p>
-      <ul class="bullet">
-        <li><strong>守秘義務</strong>: ここで話された内容は場の外に持ち出しません。</li>
-        <li><strong>学びと実験の場</strong>: 完璧さではなく学び・挑戦を尊重します。うまくいかないことも実験の一部です。</li>
-        <li><strong>共に創る</strong>: 相互承認・時間厳守・フィードフォワードで、場を一緒に良くしていきます。</li>
-      </ul>
-      <div class="buttons">
-        <button id="consentOk" class="primary">OK（同意して始める）</button>
-      </div>
-      <p class="note" style="margin-top:6px">この合意はブラウザを閉じるまで有効です。</p>
+<!-- 合意（守秘・学びと実験・共に創る）-->
+<div id="consentOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+  <div class="dialog">
+    <h2 id="consentTitle">合意の確認</h2>
+    <p>本アプリは、コーチングのスキルドリルを「効率的に・遊び心をもって」行うための場づくりを支援します。安心・安全な学びのため、以下に同意のうえ開始してください。</p>
+    <ul class="bullet">
+      <li><strong>守秘義務</strong>: ここで話された内容は場の外に持ち出しません。</li>
+      <li><strong>学びと実験の場</strong>: 完璧さではなく学び・挑戦を尊重します。うまくいかないことも実験の一部です。</li>
+      <li><strong>共に創る</strong>: 相互承認・時間厳守・フィードフォワードで、場を一緒に良くしていきます。</li>
+    </ul>
+    <div class="buttons">
+      <button id="consentOk" class="primary">OK（同意して始める）</button>
     </div>
+    <p class="note" style="margin-top:6px">この合意はブラウザを閉じるまで有効です。</p>
   </div>
+</div>
 
-  <div class="container" aria-hidden="true" id="appRoot">
-    <header>
-      <div class="logo" aria-hidden="true">Co</div>
-      <div>
-        <h1>Coaching スキルドリルアプリ</h1>
-        <p class="note">初回のみランダム。2回目・3回目は役割が順に回るローテーションで割り当てます。</p>
+<div class="container" aria-hidden="true" id="appRoot">
+  <header>
+    <div class="logo" aria-hidden="true">Co</div>
+    <div>
+      <h1>Coaching スキルドリルアプリ</h1>
+      <p class="note">初回のみランダム。2回目以降は役割が順に回るローテーションで割り当てます。</p>
+    </div>
+  </header>
+
+  <!-- 参加者・抽選 -->
+  <section class="panel" aria-labelledby="assignTitle">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+      <div id="assignTitle" style="font-weight:700">参加者と抽選</div>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label>参加者1</label>
+        <input id="p1" type="text" placeholder="参加者1" autocomplete="off" spellcheck="false">
       </div>
-    </header>
-
-    <!-- 参加者・抽選 -->
-    <section class="panel" aria-labelledby="assignTitle">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px"> <div id="assignTitle" style="font-weight:700">参加者と抽選</div> </div>
-      <div class="grid">
-        <div class="field">
-          <label>参加者1</label>
-          <input id="p1" type="text" placeholder="参加者1" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="field">
-          <label>参加者2</label>
-          <input id="p2" type="text" placeholder="参加者2" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="field">
-          <label>参加者3</label>
-          <input id="p3" type="text" placeholder="参加者3" autocomplete="off" spellcheck="false">
-        </div>
+      <div class="field">
+        <label>参加者2</label>
+        <input id="p2" type="text" placeholder="参加者2" autocomplete="off" spellcheck="false">
       </div>
+      <div class="field">
+        <label>参加者3</label>
+        <input id="p3" type="text" placeholder="参加者3" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="buttons">
+      <button id="drawBtn" class="primary">抽選する</button>
+      <button id="redrawBtn" class="secondary" disabled>もう一度 抽選</button>
+      <button id="copyBtn" class="secondary" disabled>結果をコピー</button>
+    </div>
+    <div id="error" class="error"></div>
+  </section>
 
+  <!-- 結果 -->
+  <section id="results" class="results" aria-live="polite"></section>
+
+  <!-- タイマー（ページ最下部・プリセット＋カスタム） -->
+  <section class="panel" aria-labelledby="timerTitle">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+      <div id="timerTitle" style="font-weight:700">タイマー</div>
+      <div class="preset-row">
+        <span class="note">プリセット:</span>
+        <button class="chip" data-min="15">15分</button>
+        <button class="chip" data-min="25">25分</button>
+        <button class="chip" data-min="30">30分</button>
+      </div>
+    </div>
+
+    <div class="custom-row">
+      <span class="note">カスタム設定:</span>
+      <input id="mInput" class="num" type="number" min="0" max="600" step="1" value="25" aria-label="分"> 分
+      <input id="sInput" class="num" type="number" min="0" max="59" step="1" value="0" aria-label="秒"> 秒
+      <button id="applyCustom" class="secondary">時間を適用</button>
+      <div class="grow"></div>
+    </div>
+
+    <div class="timer-wrap" style="margin-top:10px">
+      <div id="timerFace" class="timer-face">
+        <div id="time" class="time" aria-live="polite">25:00</div>
+        <div id="timeNote" class="timer-sub">第1回 | 選択時間: 25分 0秒</div>
+      </div>
       <div class="buttons">
-        <button id="drawBtn" class="primary">抽選する</button>
-        <button id="redrawBtn" class="secondary" disabled>もう一度 抽選</button>
-        <button id="copyBtn" class="secondary" disabled>結果をコピー</button>
+        <button id="startPause" class="primary">開始</button>
+        <button id="resetTimer" class="secondary">リセット</button>
+        <button id="popupBtn" class="secondary">ポップアップ表示</button>
       </div>
-      <div id="error" class="error"></div>
-    </section>
+    </div>
+  </section>
 
-    <!-- 結果 -->
-    <section id="results" class="results" aria-live="polite"></section>
-
-    <!-- タイマー（ページ最下部・プリセット＋カスタム） -->
-    <section class="panel" aria-labelledby="timerTitle">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-        <div id="timerTitle" style="font-weight:700">タイマー</div>
-        <div class="preset-row">
-          <span class="note">プリセット:</span>
-          <button class="chip" data-min="15">15分</button>
-          <button class="chip" data-min="25">25分</button>
-          <button class="chip" data-min="30">30分</button>
-        </div>
-      </div>
-
-      <div class="custom-row"> <span class="note">カスタム設定:</span> <input id="mInput" class="num" type="number" min="0" max="600" step="1" value="25" aria-label="分"> 分 <input id="sInput" class="num" type="number" min="0" max="59" step="1" value="0" aria-label="秒"> 秒 <button id="applyCustom" class="secondary">時間を適用</button> <div class="grow"></div> </div>
-
-      <div class="timer-wrap" style="margin-top:10px">
-        <div id="timerFace" class="timer-face">
-          <div id="time" class="time" aria-live="polite">25:00</div>
-          <div id="timeNote" class="timer-sub">第1回 | 選択時間: 25分 0秒</div>
-        </div>
-        <div class="buttons">
-          <button id="startPause" class="primary">開始</button>
-          <button id="resetTimer" class="secondary">リセット</button>
-          <button id="popupBtn" class="secondary">ポップアップ表示</button>
-        </div>
-      </div>
-    </section>
-
- <div class="footer"> <div>Created by Naomitchy</div> <div class="license">このアプリは CC0（著作権放棄・No Rights Reserved）相当で提供します。出典不要・改変・再配布も自由にご利用ください。</div> </div>
-
+  <div class="footer">
+    <div>Created by Naomitchy</div>
+    <div class="license">このアプリは CC0（著作権放棄・No Rights Reserved）相当で提供します。出典不要・改変・再配布も自由にご利用ください。</div>
+  </div>
+</div>
 
 <script>
 (function(){
-  'use strict';
-  // 合意（固定文面）
-  var consentOverlay = document.getElementById('consentOverlay');
-  var consentOk = document.getElementById('consentOk');
-  var appRoot = document.getElementById('appRoot');
-  function showConsent(){ consentOverlay.style.display='flex'; appRoot.setAttribute('aria-hidden','true'); }
-  function hideConsent(){ consentOverlay.style.display='none'; appRoot.removeAttribute('aria-hidden'); }
-  if (sessionStorage.getItem('consented') === '1'){ hideConsent(); } else { showConsent(); }
-  consentOk.addEventListener('click', function(){
-    sessionStorage.setItem('consented','1');
-    hideConsent();
-  });
+'use strict';
 
-  // 役割・要素参照
-  var roles = ["コーチ","クライアント","オブザーバー"];
-  var resultsEl = document.getElementById('results');
-  var drawBtn = document.getElementById('drawBtn');
-  var redrawBtn = document.getElementById('redrawBtn');
-  var copyBtn = document.getElementById('copyBtn');
-  var errEl = document.getElementById('error');
-  var p1 = document.getElementById('p1');
-  var p2 = document.getElementById('p2');
-  var p3 = document.getElementById('p3');
+// 合意（固定文面）
+var consentOverlay = document.getElementById('consentOverlay');
+var consentOk = document.getElementById('consentOk');
+var appRoot = document.getElementById('appRoot');
+function showConsent(){ consentOverlay.style.display='flex'; appRoot.setAttribute('aria-hidden','true'); }
+function hideConsent(){ consentOverlay.style.display='none'; appRoot.removeAttribute('aria-hidden'); }
+if (sessionStorage.getItem('consented') === '1'){ hideConsent(); } else { showConsent(); }
+consentOk.addEventListener('click', function(){ sessionStorage.setItem('consented','1'); hideConsent(); });
 
-  // 入力欄を空に（自動復元対策）
-  if (p1) p1.value = "";
-  if (p2) p2.value = "";
-  if (p3) p3.value = "";
+// 役割（2名/3名）
+var ROLES3 = ["コーチ","クライアント","オブザーバー"];
+var ROLES2 = ["コーチ","クライアント"];
 
-  // タイマーDOM
-  var timerFace = document.getElementById('timerFace');
-  var timeEl = document.getElementById('time');
-  var timeNoteEl = document.getElementById('timeNote');
-  var startPauseBtn = document.getElementById('startPause');
-  var resetBtn = document.getElementById('resetTimer');
-  var popupBtn = document.getElementById('popupBtn');
-  var chipBtns = Array.prototype.slice.call(document.querySelectorAll('.chip'));
-  var mInput = document.getElementById('mInput');
-  var sInput = document.getElementById('sInput');
-  var applyCustomBtn = document.getElementById('applyCustom');
+// 要素参照
+var resultsEl = document.getElementById('results');
+var drawBtn = document.getElementById('drawBtn');
+var redrawBtn = document.getElementById('redrawBtn');
+var copyBtn = document.getElementById('copyBtn');
+var errEl = document.getElementById('error');
+var p1 = document.getElementById('p1');
+var p2 = document.getElementById('p2');
+var p3 = document.getElementById('p3');
 
-  // タイマー状態（デフォルト25:00）
-  var selMin = 25, selSec = 0;
-  var didEndNotify = false; // 終了通知（ビープ等）を一度だけ行ったか
-  var running = false;
-  var remainingMs = (selMin*60 + selSec) * 1000;
-  var endAt = 0;
-  var rafId = 0;
+// 入力欄を空に（自動復元対策）
+if (p1) p1.value = "";
+if (p2) p2.value = "";
+if (p3) p3.value = "";
 
-  function setPreset(min, sec){
-    selMin = Math.max(0, Math.floor(min||0));
-    selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
-    mInput.value = String(selMin);
-    sInput.value = String(selSec);
-    chipBtns.forEach(function(b){
-      b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0);
-    });
-    if (!running){
-      remainingMs = (selMin*60 + selSec) * 1000;
-      renderTime(remainingMs);
-    }
-    updateTimeNote();
+// タイマーDOM
+var timerFace = document.getElementById('timerFace');
+var timeEl = document.getElementById('time');
+var timeNoteEl = document.getElementById('timeNote');
+var startPauseBtn = document.getElementById('startPause');
+var resetBtn = document.getElementById('resetTimer');
+var popupBtn = document.getElementById('popupBtn');
+var chipBtns = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+var mInput = document.getElementById('mInput');
+var sInput = document.getElementById('sInput');
+var applyCustomBtn = document.getElementById('applyCustom');
+
+// タイマー状態（デフォルト25:00）
+var selMin = 25, selSec = 0;
+var didEndNotify = false; // 終了通知（ビープ等）を一度だけ行ったか
+var running = false;
+var remainingMs = (selMin*60 + selSec) * 1000;
+var endAt = 0;
+var rafId = 0;
+
+function setPreset(min, sec){
+  selMin = Math.max(0, Math.floor(min||0));
+  selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
+  mInput.value = String(selMin);
+  sInput.value = String(selSec);
+  chipBtns.forEach(function(b){ b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0); });
+  if (!running){
+    remainingMs = (selMin*60 + selSec) * 1000;
+    renderTime(remainingMs);
   }
-
-function updateTimeNote(){
-timeNoteEl.textContent = "選択時間: " + selMin + "分 " + selSec + "秒";
-updatePopupUI(false); // ポップアップ未使用でもそのままでOK
+  updateTimeNote();
 }
-
-  function renderTime(ms){
-  // msが負になったら「経過オーバー」をマイナス表示
+function updateTimeNote(){
+  timeNoteEl.textContent = "選択時間: " + selMin + "分 " + selSec + "秒";
+  updatePopupUI(false);
+}
+function renderTime(ms){
   var neg = ms < 0;
   var absMs = Math.abs(ms);
-  var totalSec = Math.ceil(absMs / 1000); // 1msでも過ぎたら -00:01 と表示
+  var totalSec = Math.ceil(absMs / 1000);
   var m = Math.floor(totalSec / 60);
   var s = totalSec % 60;
   var text = (neg ? '-' : '') + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
   timeEl.textContent = text;
-  updatePopupUI(true); 
-  }
-
-  function tick(){
-var now = Date.now();
-var ms = endAt - now;
-
-// 残り（負も含む）を保持
-remainingMs = ms;
-
-// 0を初めて下回った瞬間にだけ通知（色/音/バイブ）
-if (ms <= 0 && !didEndNotify){
-timerFace.classList.add('ended');
-timeEl.classList.add('ended');
-playBeep();
-if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
-didEndNotify = true;
+  updatePopupUI(true);
 }
-
-// 残り（負も含む）を表示。負なら -mm:ss で表示されます
-renderTime(ms);
-
-// running=trueの間は継続（0を過ぎても継続）
-if (running){
-rafId = requestAnimationFrame(tick);
+function tick(){
+  var now = Date.now();
+  var ms = endAt - now;
+  remainingMs = ms;
+  if (ms <= 0 && !didEndNotify){
+    timerFace.classList.add('ended');
+    timeEl.classList.add('ended');
+    playBeep();
+    if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
+    didEndNotify = true;
+  }
+  renderTime(ms);
+  if (running){ rafId = requestAnimationFrame(tick); }
 }
+// オーディオ（終了時ビープ）
+var audioCtx = null;
+function ensureAudio(){
+  if (!audioCtx){
+    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){}
+  }
+  if (audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume().catch(function(){}); }
 }
-
-  // オーディオ（終了時ビープ）
-  var audioCtx = null;
-  function ensureAudio(){
-    if (!audioCtx){
-      try{
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }catch(_){}
-    }
-    if (audioCtx && audioCtx.state === 'suspended'){
-      audioCtx.resume().catch(function(){});
-    }
-  }
-  function playBeep(){
-    if (!audioCtx) return;
-    try{
-      var t0 = audioCtx.currentTime;
-      [0, 0.35].forEach(function(offset){
-        var osc = audioCtx.createOscillator();
-        var gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, t0+offset); // A5
-        gain.gain.setValueAtTime(0, t0+offset);
-        gain.gain.linearRampToValueAtTime(0.18, t0+offset+0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0+offset+0.28);
-        osc.connect(gain).connect(audioCtx.destination);
-        osc.start(t0+offset);
-        osc.stop(t0+offset+0.3);
-      });
-    }catch(_){}
-  }
-
-  function startTimer(){
-    if (running) return;
-    ensureAudio();
-    timerFace.classList.remove('ended');
-    timeEl.classList.remove('ended');
-    running = true;
-    endAt = Date.now() + remainingMs;
-    startPauseBtn.textContent = '一時停止';
-    updatePopupUI(false);
-    rafId = requestAnimationFrame(tick);
-  }
-  function pauseTimer(){
-    if (!running) return;
-    running = false;
-    cancelAnimationFrame(rafId);
-    remainingMs = endAt - Date.now();
-    startPauseBtn.textContent = '再開';
-    updatePopupUI(false);
-  }
-  function resetTimer(){
+function playBeep(){
+  if (!audioCtx) return;
+  try{
+    var t0 = audioCtx.currentTime;
+    [0, 0.35].forEach(function(offset){
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t0+offset); // A5
+      gain.gain.setValueAtTime(0, t0+offset);
+      gain.gain.linearRampToValueAtTime(0.18, t0+offset+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0+offset+0.28);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t0+offset);
+      osc.stop(t0+offset+0.3);
+    });
+  }catch(_){}
+}
+function startTimer(){
+  if (running) return;
+  ensureAudio();
+  timerFace.classList.remove('ended');
+  timeEl.classList.remove('ended');
+  running = true;
+  endAt = Date.now() + remainingMs;
+  startPauseBtn.textContent = '一時停止';
+  updatePopupUI(false);
+  rafId = requestAnimationFrame(tick);
+}
+function pauseTimer(){
+  if (!running) return;
   running = false;
   cancelAnimationFrame(rafId);
-  didEndNotify = false; // 終了通知フラグを戻す
+  remainingMs = endAt - Date.now();
+  startPauseBtn.textContent = '再開';
+  updatePopupUI(false);
+}
+function resetTimer(){
+  running = false;
+  cancelAnimationFrame(rafId);
+  didEndNotify = false;
   remainingMs = (selMin*60 + selSec) * 1000;
   renderTime(remainingMs);
   startPauseBtn.textContent = '開始';
   timerFace.classList.remove('ended');
   timeEl.classList.remove('ended');
 }
-
-  startPauseBtn.addEventListener('click', function(){ if (running) pauseTimer(); else startTimer(); });
-  resetBtn.addEventListener('click', resetTimer);
-  chipBtns.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      setPreset(Number(btn.dataset.min), 0);
-      resetTimer();
-      ensureAudio(); // ユーザー操作でオーディオ解禁
-    });
-  });
-  applyCustomBtn.addEventListener('click', function(){
-    var m = parseInt(mInput.value,10); var s = parseInt(sInput.value,10);
-    if (isNaN(m)||m<0) m=0;
-    if (isNaN(s)||s<0) s=0;
-    if (s>59) s=59;
-    setPreset(m, s);
+startPauseBtn.addEventListener('click', function(){ if (running) pauseTimer(); else startTimer(); });
+resetBtn.addEventListener('click', resetTimer);
+chipBtns.forEach(function(btn){
+  btn.addEventListener('click', function(){
+    setPreset(Number(btn.dataset.min), 0);
     resetTimer();
     ensureAudio();
   });
+});
+applyCustomBtn.addEventListener('click', function(){
+  var m = parseInt(mInput.value,10); var s = parseInt(sInput.value,10);
+  if (isNaN(m)||m<0) m=0; if (isNaN(s)||s<0) s=0; if (s>59) s=59;
+  setPreset(m, s);
+  resetTimer();
+  ensureAudio();
+});
 
 // ここから: ポップアップ機能
 var popupWin = null;
 var lastPopupUpdate = 0;
-
 function isPopupOpen(){ return popupWin && !popupWin.closed; }
-function setPopupBtnText(){
-if (!popupBtn) return;
-popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示';
-}
-
+function setPopupBtnText(){ if (!popupBtn) return; popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示'; }
 function openPopup(){
-if (isPopupOpen()){ popupWin.focus(); return; }
-popupWin = window.open('', 'timer_popup',
-'width=280,height=200,menubar=0,toolbar=0,location=0,status=0,resizable=1');
-if (!popupWin){
-alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。');
-return;
-}
-
-popupWin.document.write(
-'<!doctype html><html><head><meta charset="utf-8">'+
-'<title>タイマー</title>'+
-'<style>'+
-'body{margin:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;color:#1f2937;background:#fff}'+
-'.p-face{border:1px solid #e5e7eb;border-radius:12px;padding:10px;box-shadow:0 8px 18px rgba(0,0,0,.06)}'+
-'.p-time{font-variant-numeric:tabular-nums;font-size:42px;font-weight:800;text-align:center}'+
-'.ended .p-time{color:#ef4444}'+
-'.p-sub{font-size:12px;color:#6b7280;text-align:center;margin-top:4px}'+
-'.row{display:flex;gap:8px;margin-top:10px;justify-content:center}'+
-'button{appearance:none;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-weight:600;background:#fff;cursor:pointer}'+
-'</style></head><body>'+
-'<div id="pFace" class="p-face">'+
-'<div id="pTime" class="p-time">--:--</div>'+
-'<div id="pNote" class="p-sub"></div>'+
-'</div>'+
-'<div class="row">'+
-'<button id="pToggle">開始</button>'+
-'<button id="pReset">リセット</button>'+
-'<button id="pClose">閉じる</button>'+
-'</div>'+
-'</body></html>'
-);
-popupWin.document.close();
-
-// ポップアップ閉じられたら状態更新
-popupWin.addEventListener('beforeunload', function(){
-setTimeout(function(){ popupWin = null; setPopupBtnText(); }, 0);
-});
-
-// ポップアップのボタン → 親側の関数を呼ぶ
-popupWin.document.getElementById('pToggle').addEventListener('click', function(){
-if (running) pauseTimer(); else startTimer();
-});
-popupWin.document.getElementById('pReset').addEventListener('click', function(){
-resetTimer();
-});
-popupWin.document.getElementById('pClose').addEventListener('click', function(){
-popupWin.close();
-});
-// スペースキーで開始/一時停止
-popupWin.addEventListener('keydown', function(e){
-if (e.key === ' '){
-e.preventDefault();
-if (running) pauseTimer(); else startTimer();
-}
-});
-
-setPopupBtnText();
-updatePopupUI(false);
-}
-
-function closePopup(){
-if (isPopupOpen()) popupWin.close();
-}
-
-function updatePopupUI(throttle){
-if (!isPopupOpen()) return;
-var now = (window.performance && performance.now) ? performance.now() : Date.now();
-if (throttle && (now - lastPopupUpdate) < 160) return; // 160msに間引き
-lastPopupUpdate = now;
-
-var d = popupWin.document;
-var pTime = d.getElementById('pTime');
-var pNote = d.getElementById('pNote');
-var pToggle = d.getElementById('pToggle');
-var pFace = d.getElementById('pFace');
-
-if (pTime) pTime.textContent = timeEl.textContent;
-if (pNote) pNote.textContent = timeNoteEl.textContent;
-if (pToggle) pToggle.textContent = startPauseBtn.textContent;
-
-if (pFace){
-if (timeEl.classList.contains('ended')) pFace.classList.add('ended');
-else pFace.classList.remove('ended');
-}
-}
-
-// メイン画面のボタン
-if (popupBtn){
-popupBtn.addEventListener('click', function(){
-if (isPopupOpen()) closePopup(); else openPopup();
-});
-}
-window.addEventListener('beforeunload', function(){
-if (isPopupOpen()) popupWin.close();
-});
-// ここまで: ポップアップ機能
-
-  // スケジュール（ローテーション）
-  function getNames(){
-    return [
-      (p1 && p1.value ? p1.value.trim() : ""),
-      (p2 && p2.value ? p2.value.trim() : ""),
-      (p3 && p3.value ? p3.value.trim() : "")
-    ];
+  if (isPopupOpen()){ popupWin.focus(); return; }
+  popupWin = window.open('', 'timer_popup', 'width=280,height=200,menubar=0,toolbar=0,location=0,status=0,resizable=1');
+  if (!popupWin){
+    alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。');
+    return;
   }
-  function validate(names){
-    if (!names[0] || !names[1] || !names[2]) return "参加者名が空欄です。3名すべて入力してください。";
-    if (names[0]===names[1] || names[0]===names[2] || names[1]===names[2]) return "参加者名が重複しています。区別できる名前にしてください。";
-    return "";
-  }
-  function rngInt(maxExclusive){
-    if (window.crypto && window.crypto.getRandomValues){
-      var a = new Uint32Array(1);
-      window.crypto.getRandomValues(a);
-      return a[0] % maxExclusive;
-    }
-    return Math.floor(Math.random() * maxExclusive);
-  }
-  function shuffle(arr){
-    var a = arr.slice();
-    for (var i=a.length-1; i>0; i--){
-      var j = rngInt(i+1); var t=a[i]; a[i]=a[j]; a[j]=t;
-    }
-    return a;
-  }
-  function genRotationSchedule(names){
-    var rounds = [];
-    var first = shuffle(names);
-    for (var r=0; r<3; r++){
-      var m = {};
-      for (var i=0; i<3; i++){
-        m[roles[i]] = first[(i+r)%3];
-      }
-      rounds.push(m);
-    }
-    return rounds;
-  }
-  function clearResults(){ resultsEl.innerHTML = ""; }
-  function buildRoundCard(index){
-    var wrap = document.createElement('div'); wrap.className = 'round';
-    var h = document.createElement('h3');
-    var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = '第' + (index+1) + '回';
-    h.textContent = '割り当て'; h.prepend(badge);
-    wrap.appendChild(h);
-    var list = document.createElement('div'); list.className = 'assign';
-    for (var i=0;i<roles.length;i++){
-      var row = document.createElement('div'); row.className = 'role';
-      var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = roles[i];
-      var name = document.createElement('div'); name.className = 'name placeholder'; name.textContent = '？？？';
-      row.appendChild(tag); row.appendChild(name); list.appendChild(row);
-    }
-    wrap.appendChild(list);
-    return wrap;
-  }
-  function renderPlaceholders(){
-    clearResults();
-    for (var r=0; r<3; r++){ resultsEl.appendChild(buildRoundCard(r)); }
-  }
-  function revealSchedule(schedule){
-    var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
-    var delay = 160, step = 280;
-    for (var rIdx=0; rIdx<cards.length; rIdx++){
-      var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
-      for (var i=0; i<roles.length; i++){
-        (function(roundIndex, roleIndex, when){
-          var row = rows[roleIndex];
-          var nameEl = row.querySelector('.name');
-          var name = schedule[roundIndex][roles[roleIndex]];
-          setTimeout(function(){
-            nameEl.textContent = name;
-            nameEl.classList.remove('placeholder');
-            row.classList.add('reveal');
-            setTimeout(function(){ row.classList.remove('reveal'); }, 240);
-          }, when);
-        })(rIdx, i, delay);
-        delay += step;
-      }
-    }
-  }
-  function scheduleToText(schedule){
-    var lines = [];
-    for (var r=0; r<schedule.length; r++){
-      lines.push('第' + (r+1) + '回');
-      for (var i=0; i<roles.length; i++){
-        var role = roles[i];
-        lines.push('- ' + role + ': ' + schedule[r][role]);
-      }
-      if (r < schedule.length - 1) lines.push('');
-    }
-    return lines.join('\n');
-  }
+  popupWin.document.write(
+    '<!doctype html><html><head><meta charset="utf-8">'+
+    '<title>タイマー</title>'+
+    '<style>'+
+    'body{margin:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;color:#1f2937;background:#fff}'+
+    '.p-face{border:1px solid #e5e7eb;border-radius:12px;padding:10px;box-shadow:0 8px 18px rgba(0,0,0,.06)}'+
+    '.p-time{font-variant-numeric:tabular-nums;font-size:42px;font-weight:800;text-align:center}'+
+    '.ended .p-time{color:#ef4444}'+
+    '.p-sub{font-size:12px;color:#6b7280;text-align:center;margin-top:4px}'+
+    '.row{display:flex;gap:8px;margin-top:10px;justify-content:center}'+
+    'button{appearance:none;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-weight:600;background:#fff;cursor:pointer}'+
+    '</style></head><body>'+
+    '<div id="pFace" class="p-face">'+
+    '<div id="pTime" class="p-time">--:--</div>'+
+    '<div id="pNote" class="p-sub"></div>'+
+    '</div>'+
+    '<div class="row">'+
+    '<button id="pToggle">開始</button>'+
+    '<button id="pReset">リセット</button>'+
+    '<button id="pClose">閉じる</button>'+
+    '</div>'+
+    '</body></html>'
+  );
+  popupWin.document.close();
 
-  var lastScheduleText = '';
-  function draw(){
-    errEl.style.display = 'none';
-    if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
-    var names = getNames();
-    var msg = validate(names);
-    if (msg){
-      errEl.textContent = msg;
-      errEl.style.display = 'block';
-      return;
-    }
-    var schedule = genRotationSchedule(names);
-    renderPlaceholders();
-    setTimeout(function(){ revealSchedule(schedule); }, 180);
-    redrawBtn.disabled = false;
-    copyBtn.disabled = false;
-    lastScheduleText = scheduleToText(schedule);
-    copyBtn.dataset.text = lastScheduleText;
-  }
+  popupWin.addEventListener('beforeunload', function(){
+    setTimeout(function(){ popupWin = null; setPopupBtnText(); }, 0);
+  });
 
-  // イベント
-  drawBtn.addEventListener('click', draw);
-  redrawBtn.addEventListener('click', draw);
-  copyBtn.addEventListener('click', function(){
-    var text = copyBtn.dataset.text || lastScheduleText || '';
-    try{
-      if (navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(text).then(function(){
-          var old = copyBtn.textContent;
-          copyBtn.textContent = 'コピーしました！';
-          setTimeout(function(){ copyBtn.textContent = old; }, 1300);
-        }, function(){ throw new Error('Clipboard API failed'); });
-      } else {
-        var ta = document.createElement('textarea');
-        ta.value = text; document.body.appendChild(ta);
-        ta.select(); document.execCommand('copy');
-        document.body.removeChild(ta);
-        var old2 = copyBtn.textContent;
-        copyBtn.textContent = 'コピーしました！';
-        setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
-      }
-    } catch(e){
-      alert('コピーに失敗しました。手動でコピーしてください。');
+  popupWin.document.getElementById('pToggle').addEventListener('click', function(){
+    if (running) pauseTimer(); else startTimer();
+  });
+  popupWin.document.getElementById('pReset').addEventListener('click', function(){
+    resetTimer();
+  });
+  popupWin.document.getElementById('pClose').addEventListener('click', function(){
+    popupWin.close();
+  });
+  popupWin.addEventListener('keydown', function(e){
+    if (e.key === ' '){
+      e.preventDefault();
+      if (running) pauseTimer(); else startTimer();
     }
   });
 
-  // 初期表示
+  setPopupBtnText();
+  updatePopupUI(false);
+}
+function closePopup(){ if (isPopupOpen()) popupWin.close(); }
+function updatePopupUI(throttle){
+  if (!isPopupOpen()) return;
+  var now = (window.performance && performance.now) ? performance.now() : Date.now();
+  if (throttle && (now - lastPopupUpdate) < 160) return;
+  lastPopupUpdate = now;
+
+  var d = popupWin.document;
+  var pTime = d.getElementById('pTime');
+  var pNote = d.getElementById('pNote');
+  var pToggle = d.getElementById('pToggle');
+  var pFace = d.getElementById('pFace');
+
+  if (pTime) pTime.textContent = timeEl.textContent;
+  if (pNote) pNote.textContent = timeNoteEl.textContent;
+  if (pToggle) pToggle.textContent = startPauseBtn.textContent;
+
+  if (pFace){
+    if (timeEl.classList.contains('ended')) pFace.classList.add('ended');
+    else pFace.classList.remove('ended');
+  }
+}
+if (popupBtn){
+  popupBtn.addEventListener('click', function(){
+    if (isPopupOpen()) closePopup(); else openPopup();
+  });
+}
+window.addEventListener('beforeunload', function(){ if (isPopupOpen()) popupWin.close(); });
+// ここまで: ポップアップ機能
+
+// スケジュール（ローテーション）
+function getNames(){
+  return [
+    (p1 && p1.value ? p1.value.trim() : ""),
+    (p2 && p2.value ? p2.value.trim() : ""),
+    (p3 && p3.value ? p3.value.trim() : "")
+  ];
+}
+// 空欄を除いた実入力（2〜3名）を取得
+function getFilledNames(){
+  return getNames().map(function(n){ return (n||"").trim(); }).filter(function(n){ return n !== ""; });
+}
+// 人数に応じて役割を返す
+function getRolesForCount(n){
+  return n === 2 ? ROLES2 : ROLES3;
+}
+// バリデーション（2〜3名、重複なし）
+function validate(names){
+  if (names.length < 2) return "参加者は2名以上で入力してください。";
+  if (names.length > 3) return "参加者は最大3名までです。";
+  for (var i=0;i<names.length;i++){
+    for (var j=i+1;j<names.length;j++){
+      if (names[i] === names[j]) return "参加者名が重複しています。区別できる名前にしてください。";
+    }
+  }
+  return "";
+}
+function rngInt(maxExclusive){
+  if (window.crypto && window.crypto.getRandomValues){
+    var a = new Uint32Array(1);
+    window.crypto.getRandomValues(a);
+    return a[0] % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
+}
+function shuffle(arr){
+  var a = arr.slice();
+  for (var i=a.length-1; i>0; i--){
+    var j = rngInt(i+1); var t=a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+// 人数・役割に応じてローテーション（初回はランダム、以降はシフト）
+function genRotationSchedule(names, roles){
+  var rounds = names.length; // 2名なら2ラウンド、3名なら3ラウンド
+  var first = shuffle(names);
+  var out = [];
+  for (var r=0; r<rounds; r++){
+    var m = {};
+    for (var i=0; i<roles.length; i++){
+      m[roles[i]] = first[(i + r) % names.length];
+    }
+    out.push(m);
+  }
+  return out;
+}
+function clearResults(){ resultsEl.innerHTML = ""; }
+function buildRoundCard(index, roles){
+  var wrap = document.createElement('div'); wrap.className = 'round';
+  var h = document.createElement('h3');
+  var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = '第' + (index+1) + '回';
+  h.textContent = '割り当て'; h.prepend(badge);
+  wrap.appendChild(h);
+  var list = document.createElement('div'); list.className = 'assign';
+  for (var i=0;i<roles.length;i++){
+    var row = document.createElement('div'); row.className = 'role';
+    var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = roles[i];
+    var name = document.createElement('div'); name.className = 'name placeholder'; name.textContent = '？？？';
+    row.appendChild(tag); row.appendChild(name); list.appendChild(row);
+  }
+  wrap.appendChild(list);
+  return wrap;
+}
+function renderPlaceholders(roundCount, roles){
+  clearResults();
+  for (var r=0; r<roundCount; r++){ resultsEl.appendChild(buildRoundCard(r, roles)); }
+}
+function revealSchedule(schedule, roles){
+var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
+var delay = 160, step = 280;
+for (var rIdx=0; rIdx<cards.length; rIdx++){
+var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
+for (var i=0; i<roles.length; i++){
+(function(roundIndex, roleIndex, when){
+var row = rows[roleIndex];
+var nameEl = row.querySelector('.name');
+var name = schedule[roundIndex][roles[roleIndex]];
+setTimeout(function(){
+nameEl.textContent = name;
+nameEl.classList.remove('placeholder');
+row.classList.add('reveal');
+setTimeout(function(){ row.classList.remove('reveal'); }, 240);
+}, when);
+})(rIdx, i, delay);
+delay += step;
+}
+}
+}
+
+function scheduleToText(schedule, roles){
+var lines = [];
+for (var r=0; r<schedule.length; r++){
+lines.push('第' + (r+1) + '回');
+for (var i=0; i<roles.length; i++){
+var role = roles[i];
+lines.push('- ' + role + ': ' + schedule[r][role]);
+}
+if (r < schedule.length - 1) lines.push('');
+}
+return lines.join('\n');
+}
+
+var lastScheduleText = '';
+function draw(){
+errEl.style.display = 'none';
+if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
+
+var names = getFilledNames(); // 空欄を除去して2〜3名を取得
+var msg = validate(names);
+if (msg){
+errEl.textContent = msg;
+errEl.style.display = 'block';
+return;
+}
+
+var currRoles = getRolesForCount(names.length);
+var schedule = genRotationSchedule(names, currRoles);
+
+// 人数に応じたプレースホルダー（2名なら2回、3名なら3回）
+renderPlaceholders(names.length, currRoles);
+setTimeout(function(){ revealSchedule(schedule, currRoles); }, 180);
+
+redrawBtn.disabled = false;
+copyBtn.disabled = false;
+
+lastScheduleText = scheduleToText(schedule, currRoles);
+copyBtn.dataset.text = lastScheduleText;
+}
+
+// イベント
+drawBtn.addEventListener('click', draw);
+redrawBtn.addEventListener('click', draw);
+copyBtn.addEventListener('click', function(){
+var text = copyBtn.dataset.text || lastScheduleText || '';
+try{
+if (navigator.clipboard && navigator.clipboard.writeText){
+navigator.clipboard.writeText(text).then(function(){
+var old = copyBtn.textContent;
+copyBtn.textContent = 'コピーしました！';
+setTimeout(function(){ copyBtn.textContent = old; }, 1300);
+}, function(){ throw new Error('Clipboard API failed'); });
+} else {
+var ta = document.createElement('textarea');
+ta.value = text; document.body.appendChild(ta);
+ta.select(); document.execCommand('copy');
+document.body.removeChild(ta);
+var old2 = copyBtn.textContent;
+copyBtn.textContent = 'コピーしました！';
+setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
+}
+} catch(e){
+alert('コピーに失敗しました。手動でコピーしてください。');
+}
+});
+
+// 初期表示
 function init(){
-renderPlaceholders();
+renderPlaceholders(3, ROLES3);
 setPreset(25, 0);
 renderTime(remainingMs);
 updateTimeNote();
 }
-  init();
+init();
+
 })();
 </script>
-</body>
-</html>
+
+</body> </html>
