@@ -355,6 +355,18 @@ var running = false;
 var remainingMs = (selMin*60 + selSec) * 1000;
 var endAt = 0;
 var rafId = 0;
+// 追加: ポップアップから参照するための状態ゲッター
+window.getTimerState = function(){
+return {
+running: running,
+endAt: endAt,
+remainingMs: remainingMs,
+selMin: selMin,
+selSec: selSec,
+didEndNotify: didEndNotify,
+totalMs: (selMin*60 + selSec) * 1000
+};
+};
 
 function setPreset(min, sec){
   selMin = Math.max(0, Math.floor(min||0));
@@ -441,6 +453,21 @@ function playBeep(){
     });
   }catch(_){}
 }
+// 追加: 最終到達時の通知を必要に応じて実行
+function ensureEndFired(){
+var ms = endAt - Date.now();
+remainingMs = ms;
+if (ms <= 0 && !didEndNotify){
+timerFace.classList.add('ended');
+timeEl.classList.add('ended');
+playBeep();
+if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
+didEndNotify = true;
+showEndMessage();
+}
+}
+// ポップアップから呼べるように公開
+window.ensureEndFired = ensureEndFired;
 
 function startTimer(){
   if (running) return;
@@ -547,7 +574,34 @@ function openPopup(){
       if (running) pauseTimer(); else startTimer();
     }
   });
-
+var boot = "(function(){\n" +
+" var d=document;\n" +
+" var pTime=d.getElementById('pTime');\n" +
+" var pNote=d.getElementById('pNote');\n" +
+" var pToggle=d.getElementById('pToggle');\n" +
+" var pFace=d.getElementById('pFace');\n" +
+" function two(n){return n<10?'0'+n:n;}\n" +
+" function render(){\n" +
+" var op = window.opener;\n" +
+" if (!op || op.closed || !op.getTimerState) return;\n" +
+" var s = op.getTimerState();\n" +
+" var ms = s.running ? (s.endAt - Date.now()) : s.remainingMs;\n" +
+" var abs = Math.abs(ms);\n" +
+" var totalSec = Math.ceil(abs/1000);\n" +
+" var m = Math.floor(totalSec/60);\n" +
+" var sec = totalSec%60;\n" +
+" pTime.textContent = (ms<0?'-':'') + two(m) + ':' + two(sec);\n" +
+" pNote.textContent = '選択時間: ' + s.selMin + '分 ' + s.selSec + '秒';\n" +
+" if (ms<=0){ pFace.classList.add('ended'); } else { pFace.classList.remove('ended'); }\n" +
+" pToggle.textContent = s.running ? '一時停止' : (ms < s.totalMs && ms>0 ? '再開' : '開始');\n" +
+" if (ms<=0 && op.ensureEndFired){ op.ensureEndFired(); }\n" +
+" }\n" +
+" render();\n" +
+" setInterval(render, 200);\n" +
+"})();";
+var sc = popupWin.document.createElement('script');
+sc.textContent = boot;
+popupWin.document.body.appendChild(sc);
   setPopupBtnText();
   updatePopupUI(false);
 }
