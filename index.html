@@ -372,19 +372,46 @@ totalMs: (selMin*60 + selSec) * 1000
 };
 };
 
+// 追加: タイマー選択の保存/復元
+var TIMER_MIN_KEY = 'timerSelMin';
+var TIMER_SEC_KEY = 'timerSelSec';
+
+function saveTimerSelection(){
+try{
+localStorage.setItem(TIMER_MIN_KEY, String(selMin));
+localStorage.setItem(TIMER_SEC_KEY, String(selSec));
+}catch(_){}
+}
+
+function restoreTimerSelection(){
+try{
+var m = parseInt(localStorage.getItem(TIMER_MIN_KEY), 10);
+var s = parseInt(localStorage.getItem(TIMER_SEC_KEY), 10);
+if (isNaN(m)) return false; // 保存が無い（または壊れている）場合
+if (isNaN(s)) s = 0;
+setPreset(m, s); // 復元
+return true;
+}catch(_){
+return false;
+}
+}
+
 function setPreset(min, sec){
-  selMin = Math.max(0, Math.floor(min||0));
-  selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
-  mInput.value = String(selMin);
-  sInput.value = String(selSec);
-  chipBtns.forEach(function(b){
-    b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0);
-  });
-  if (!running){
-    remainingMs = (selMin*60 + selSec) * 1000;
-    renderTime(remainingMs);
-  }
-  updateTimeNote();
+selMin = Math.max(0, Math.floor(min||0));
+selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
+mInput.value = String(selMin);
+sInput.value = String(selSec);
+chipBtns.forEach(function(b){
+b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0);
+});
+if (!running){
+remainingMs = (selMin*60 + selSec) * 1000;
+renderTime(remainingMs);
+}
+updateTimeNote();
+
+// 追加: 選択時間を保存
+saveTimerSelection();
 }
 
 function updateTimeNote(){
@@ -894,10 +921,18 @@ copyBtn.addEventListener('click', function(){
 
 /* 初期表示 */
 function init(){
-  renderPlaceholders(3, ROLES3);
-  setPreset(25, 0);
-  renderTime(remainingMs);
-  updateTimeNote();
+renderPlaceholders(3, ROLES3);
+
+// 追加: 保存されたタイマー設定の復元を試みる
+if (!restoreTimerSelection()){
+// 保存が無い場合はデフォルト25:00
+setPreset(25, 0);
+}
+
+// setPreset 内で renderTime と updateTimeNote を既に実行しているため、
+// 下の2行は残しておいても動作に支障はありません（不要なら削除OK）。
+renderTime(remainingMs);
+updateTimeNote();
 }
 init();
 
