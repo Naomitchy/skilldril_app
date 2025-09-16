@@ -6,8 +6,7 @@
 <title>Coaching スキルドリルアプリ</title>
 <style>
 :root{
-  --bg:#ffffff; --ink:#1f2937; --muted:#6b7280; --border:#e5e7eb;
-  --accent:#3b82f6; --accent-2:#10b981; --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
+  --bg:#ffffff; --ink:#1f2937; --muted:#6b7280; --border:#e5e7eb; --accent:#3b82f6; --accent-2:#10b981; --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
 }
 *{box-sizing:border-box}
 body{
@@ -17,8 +16,7 @@ body{
 .container{ max-width:1000px; margin:0 auto; padding:24px 16px 48px }
 header{ display:flex; align-items:flex-start; gap:12px; margin-bottom:16px }
 .logo{
-  width:42px; height:42px; border-radius:10px;
-  background:linear-gradient(135deg,var(--accent),#60a5fa);
+  width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#60a5fa);
   display:grid; place-items:center; color:#fff; font-weight:900; box-shadow:var(--shadow);
 }
 h1{ font-size:22px; margin:0 }
@@ -111,21 +109,21 @@ button{
 .timer-face.ended{ border-color:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.15); animation:pulse 900ms ease-out 2 }
 @keyframes pulse{ 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
 .timer-sub{ text-align:center; color:var(--muted); font-size:12px; margin-top:4px }
-.round-nav{ display:flex; gap:8px; align-items:center }
-.round-label{ font-size:14px; color:var(--muted) }
-.preset-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-.custom-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px }
-.num{ width:84px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px }
-.grow{ flex:1 1 auto }
 
-.footer{
-  color:var(--muted); font-size:12px; margin-top:18px;
-  display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-  border-top:1px solid var(--border); padding-top:12px;
+/* 終了メッセージ */
+.timer-end-msg{
+  text-align:center; color:#065f46; font-size:12px; margin-top:6px;
+  opacity:0; transition: opacity .25s ease;
+  display:none;
 }
-.license{
-  padding:6px 10px; border-radius:10px; border:1px dashed var(--border); background:#fafafa;
+.timer-end-msg.show{ display:block; opacity:1; }
+
+/* 入力横の演出トグル */
+.fx-row{
+  display:flex; align-items:center; gap:8px; margin-top:8px; color:var(--muted); font-size:13px;
 }
+.fx-row input{ width:16px; height:16px }
+.fx-row label{ user-select:none; cursor:pointer }
 
 /* 合意オーバーレイ（固定文・OKで開始） */
 .overlay{
@@ -134,19 +132,51 @@ button{
 }
 .dialog{
   max-width:780px; width:100%;
-  background:#fff; color:var(--ink); border-radius:16px; border:1px solid var(--border);
+  background:#fff; color:#fff; border-radius:16px; border:1px solid var(--border);
   box-shadow:0 20px 40px rgba(0,0,0,.25);
-  padding:16px;
+  padding:16px; color:#1f2937;
 }
 .dialog h2{ margin:0 0 8px; font-size:18px }
 .dialog p{ margin:6px 0; color:#374151; line-height:1.6 }
 .bullet{ margin:8px 0 0 0; padding-left:18px; color:#374151 }
 .bullet li{ margin:6px 0 }
 .dialog .buttons{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap }
+
+/* プリセット/カスタム行 */
+.preset-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+.custom-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px }
+.num{ width:84px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px }
+.grow{ flex:1 1 auto }
+
+/* 紙吹雪（小さめ） */
+.confetti-piece{
+  position:fixed; top:-12px; width:8px; height:12px; border-radius:2px; opacity:.9; z-index:60;
+  animation: confettiFall 1100ms ease-out forwards;
+  pointer-events:none;
+}
+@keyframes confettiFall{
+  0%{ transform:translateY(-12px) rotate(0deg) }
+  100%{ transform:translateY(100vh) rotate(540deg) }
+}
+
+/* メディアクエリ */
 @media (max-width:720px){ .grid{ grid-template-columns: 1fr } }
+@media (prefers-reduced-motion: reduce){
+  .reveal, .timer-face.ended{ animation:none }
+  .confetti-piece{ display:none !important; animation:none !important }
+}
+.footer{
+  color:var(--muted); font-size:12px; margin-top:18px;
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+  border-top:1px solid var(--border); padding-top:12px;
+}
+.license{
+  padding:6px 10px; border-radius:10px; border:1px dashed var(--border); background:#fafafa;
+}
 </style>
 </head>
 <body>
+
 <!-- 合意（守秘・学びと実験・共に創る）-->
 <div id="consentOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
   <div class="dialog">
@@ -169,7 +199,7 @@ button{
     <div class="logo" aria-hidden="true">Co</div>
     <div>
       <h1>Coaching スキルドリルアプリ</h1>
-      <p class="note">初回のみランダム。2回目以降は役割が順に回るローテーションで割り当てます。</p>
+      <!-- 「初回のみランダム…」の説明文は削除 -->
     </div>
   </header>
 
@@ -180,24 +210,33 @@ button{
     </div>
     <div class="grid">
       <div class="field">
-        <label>参加者1</label>
+        <label for="p1">参加者1</label>
         <input id="p1" type="text" placeholder="参加者1" autocomplete="off" spellcheck="false">
       </div>
       <div class="field">
-        <label>参加者2</label>
+        <label for="p2">参加者2</label>
         <input id="p2" type="text" placeholder="参加者2" autocomplete="off" spellcheck="false">
       </div>
       <div class="field">
-        <label>参加者3</label>
+        <label for="p3">参加者3</label>
         <input id="p3" type="text" placeholder="参加者3" autocomplete="off" spellcheck="false">
       </div>
     </div>
+
     <div class="buttons">
       <button id="drawBtn" class="primary">抽選する</button>
       <button id="redrawBtn" class="secondary" disabled>もう一度 抽選</button>
       <button id="copyBtn" class="secondary" disabled>結果をコピー</button>
     </div>
-    <div id="error" class="error"></div>
+
+    <!-- 軽い演出のオン/オフ -->
+    <div class="fx-row">
+      <input type="checkbox" id="fxToggle">
+      <label for="fxToggle">軽い演出を有効にする
+</label>
+    </div>
+
+    <div id="error" class="error" role="alert"></div>
   </section>
 
   <!-- 結果 -->
@@ -226,7 +265,8 @@ button{
     <div class="timer-wrap" style="margin-top:10px">
       <div id="timerFace" class="timer-face">
         <div id="time" class="time" aria-live="polite">25:00</div>
-        <div id="timeNote" class="timer-sub">第1回 | 選択時間: 25分 0秒</div>
+        <div id="timeNote" class="timer-sub">選択時間: 25分 0秒</div>
+        <div id="endMsg" class="timer-end-msg" aria-live="polite">お疲れさま！</div>
       </div>
       <div class="buttons">
         <button id="startPause" class="primary">開始</button>
@@ -246,7 +286,7 @@ button{
 (function(){
 'use strict';
 
-// 合意（固定文面）
+/* 合意（固定文面） */
 var consentOverlay = document.getElementById('consentOverlay');
 var consentOk = document.getElementById('consentOk');
 var appRoot = document.getElementById('appRoot');
@@ -255,11 +295,11 @@ function hideConsent(){ consentOverlay.style.display='none'; appRoot.removeAttri
 if (sessionStorage.getItem('consented') === '1'){ hideConsent(); } else { showConsent(); }
 consentOk.addEventListener('click', function(){ sessionStorage.setItem('consented','1'); hideConsent(); });
 
-// 役割（2名/3名）
+/* 役割（2名/3名） */
 var ROLES3 = ["コーチ","クライアント","オブザーバー"];
 var ROLES2 = ["コーチ","クライアント"];
 
-// 要素参照
+/* 要素参照 */
 var resultsEl = document.getElementById('results');
 var drawBtn = document.getElementById('drawBtn');
 var redrawBtn = document.getElementById('redrawBtn');
@@ -269,15 +309,37 @@ var p1 = document.getElementById('p1');
 var p2 = document.getElementById('p2');
 var p3 = document.getElementById('p3');
 
-// 入力欄を空に（自動復元対策）
+/* 演出トグル */
+var fxToggle = document.getElementById('fxToggle');
+var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var effectsEnabled = true;
+try{
+  var savedFx = localStorage.getItem('effectsEnabled');
+  if (savedFx === null){
+    effectsEnabled = !prefersReducedMotion; // 既定はreduce指定ならオフ
+  } else {
+    effectsEnabled = savedFx === '1';
+  }
+}catch(_){ effectsEnabled = !prefersReducedMotion; }
+if (fxToggle){ fxToggle.checked = !!effectsEnabled; }
+function isMotionOk(){ return effectsEnabled && !prefersReducedMotion; }
+if (fxToggle){
+  fxToggle.addEventListener('change', function(){
+    effectsEnabled = !!fxToggle.checked;
+    try{ localStorage.setItem('effectsEnabled', effectsEnabled ? '1' : '0'); }catch(_){}
+  });
+}
+
+/* 入力欄を空に（自動復元対策） */
 if (p1) p1.value = "";
 if (p2) p2.value = "";
 if (p3) p3.value = "";
 
-// タイマーDOM
+/* タイマーDOM */
 var timerFace = document.getElementById('timerFace');
 var timeEl = document.getElementById('time');
 var timeNoteEl = document.getElementById('timeNote');
+var endMsgEl = document.getElementById('endMsg');
 var startPauseBtn = document.getElementById('startPause');
 var resetBtn = document.getElementById('resetTimer');
 var popupBtn = document.getElementById('popupBtn');
@@ -286,7 +348,7 @@ var mInput = document.getElementById('mInput');
 var sInput = document.getElementById('sInput');
 var applyCustomBtn = document.getElementById('applyCustom');
 
-// タイマー状態（デフォルト25:00）
+/* タイマー状態（デフォルト25:00） */
 var selMin = 25, selSec = 0;
 var didEndNotify = false; // 終了通知（ビープ等）を一度だけ行ったか
 var running = false;
@@ -299,17 +361,21 @@ function setPreset(min, sec){
   selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
   mInput.value = String(selMin);
   sInput.value = String(selSec);
-  chipBtns.forEach(function(b){ b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0); });
+  chipBtns.forEach(function(b){
+    b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0);
+  });
   if (!running){
     remainingMs = (selMin*60 + selSec) * 1000;
     renderTime(remainingMs);
   }
   updateTimeNote();
 }
+
 function updateTimeNote(){
   timeNoteEl.textContent = "選択時間: " + selMin + "分 " + selSec + "秒";
   updatePopupUI(false);
 }
+
 function renderTime(ms){
   var neg = ms < 0;
   var absMs = Math.abs(ms);
@@ -320,6 +386,15 @@ function renderTime(ms){
   timeEl.textContent = text;
   updatePopupUI(true);
 }
+
+function showEndMessage(){
+  if (!endMsgEl) return;
+  if (effectsEnabled){
+    endMsgEl.classList.add('show');
+    setTimeout(function(){ endMsgEl.classList.remove('show'); }, 2500);
+  }
+}
+
 function tick(){
   var now = Date.now();
   var ms = endAt - now;
@@ -330,17 +405,23 @@ function tick(){
     playBeep();
     if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
     didEndNotify = true;
+    showEndMessage();
   }
   renderTime(ms);
-  if (running){ rafId = requestAnimationFrame(tick); }
+  if (running){
+    rafId = requestAnimationFrame(tick);
+  }
 }
-// オーディオ（終了時ビープ）
+
+/* オーディオ（終了時ビープ） */
 var audioCtx = null;
 function ensureAudio(){
   if (!audioCtx){
     try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){}
   }
-  if (audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume().catch(function(){}); }
+  if (audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume().catch(function(){});
+  }
 }
 function playBeep(){
   if (!audioCtx) return;
@@ -360,11 +441,13 @@ function playBeep(){
     });
   }catch(_){}
 }
+
 function startTimer(){
   if (running) return;
   ensureAudio();
   timerFace.classList.remove('ended');
   timeEl.classList.remove('ended');
+  if (endMsgEl) endMsgEl.classList.remove('show');
   running = true;
   endAt = Date.now() + remainingMs;
   startPauseBtn.textContent = '一時停止';
@@ -388,7 +471,9 @@ function resetTimer(){
   startPauseBtn.textContent = '開始';
   timerFace.classList.remove('ended');
   timeEl.classList.remove('ended');
+  if (endMsgEl) endMsgEl.classList.remove('show');
 }
+
 startPauseBtn.addEventListener('click', function(){ if (running) pauseTimer(); else startTimer(); });
 resetBtn.addEventListener('click', resetTimer);
 chipBtns.forEach(function(btn){
@@ -399,25 +484,29 @@ chipBtns.forEach(function(btn){
   });
 });
 applyCustomBtn.addEventListener('click', function(){
-  var m = parseInt(mInput.value,10); var s = parseInt(sInput.value,10);
-  if (isNaN(m)||m<0) m=0; if (isNaN(s)||s<0) s=0; if (s>59) s=59;
+  var m = parseInt(mInput.value,10);
+  var s = parseInt(sInput.value,10);
+  if (isNaN(m)||m<0) m=0;
+  if (isNaN(s)||s<0) s=0;
+  if (s>59) s=59;
   setPreset(m, s);
   resetTimer();
   ensureAudio();
 });
 
-// ここから: ポップアップ機能
+/* ここから: ポップアップ機能 */
 var popupWin = null;
 var lastPopupUpdate = 0;
 function isPopupOpen(){ return popupWin && !popupWin.closed; }
-function setPopupBtnText(){ if (!popupBtn) return; popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示'; }
+function setPopupBtnText(){
+  if (!popupBtn) return;
+  popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示';
+}
 function openPopup(){
   if (isPopupOpen()){ popupWin.focus(); return; }
   popupWin = window.open('', 'timer_popup', 'width=280,height=200,menubar=0,toolbar=0,location=0,status=0,resizable=1');
-  if (!popupWin){
-    alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。');
-    return;
-  }
+  if (!popupWin){ alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。'); return; }
+
   popupWin.document.write(
     '<!doctype html><html><head><meta charset="utf-8">'+
     '<title>タイマー</title>'+
@@ -450,12 +539,8 @@ function openPopup(){
   popupWin.document.getElementById('pToggle').addEventListener('click', function(){
     if (running) pauseTimer(); else startTimer();
   });
-  popupWin.document.getElementById('pReset').addEventListener('click', function(){
-    resetTimer();
-  });
-  popupWin.document.getElementById('pClose').addEventListener('click', function(){
-    popupWin.close();
-  });
+  popupWin.document.getElementById('pReset').addEventListener('click', function(){ resetTimer(); });
+  popupWin.document.getElementById('pClose').addEventListener('click', function(){ popupWin.close(); });
   popupWin.addEventListener('keydown', function(e){
     if (e.key === ' '){
       e.preventDefault();
@@ -494,24 +579,24 @@ if (popupBtn){
   });
 }
 window.addEventListener('beforeunload', function(){ if (isPopupOpen()) popupWin.close(); });
-// ここまで: ポップアップ機能
+/* ここまで: ポップアップ機能 */
 
-// スケジュール（ローテーション）
+/* スケジュール（常にランダム開始でOK） */
 function getNames(){
-  return [
-    (p1 && p1.value ? p1.value.trim() : ""),
-    (p2 && p2.value ? p2.value.trim() : ""),
-    (p3 && p3.value ? p3.value.trim() : "")
-  ];
+return [
+(p1 && p1.value ? p1.value.trim() : ""),
+(p2 && p2.value ? p2.value.trim() : ""),
+(p3 && p3.value ? p3.value.trim() : "")
+];
 }
 // 空欄を除いた実入力（2〜3名）を取得
+// 以下を、前回提示したコードの「// 空欄を除いた実入力（2〜3名）を取得」の直後から末尾にそのまま追記してください。
+
 function getFilledNames(){
-  return getNames().map(function(n){ return (n||"").trim(); }).filter(function(n){ return n !== ""; });
+return getNames().map(function(n){ return (n||"").trim(); }).filter(function(n){ return n !== ""; });
 }
 // 人数に応じて役割を返す
-function getRolesForCount(n){
-  return n === 2 ? ROLES2 : ROLES3;
-}
+function getRolesForCount(n){ return n === 2 ? ROLES2 : ROLES3; }
 // バリデーション（2〜3名、重複なし）
 function validate(names){
   if (names.length < 2) return "参加者は2名以上で入力してください。";
@@ -538,7 +623,7 @@ function shuffle(arr){
   }
   return a;
 }
-// 人数・役割に応じてローテーション（初回はランダム、以降はシフト）
+// 人数・役割に応じてランダムで開始してローテーション
 function genRotationSchedule(names, roles){
   var rounds = names.length; // 2名なら2ラウンド、3名なら3ラウンド
   var first = shuffle(names);
@@ -573,104 +658,166 @@ function renderPlaceholders(roundCount, roles){
   clearResults();
   for (var r=0; r<roundCount; r++){ resultsEl.appendChild(buildRoundCard(r, roles)); }
 }
-function revealSchedule(schedule, roles){
-var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
-var delay = 160, step = 280;
-for (var rIdx=0; rIdx<cards.length; rIdx++){
-var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
-for (var i=0; i<roles.length; i++){
-(function(roundIndex, roleIndex, when){
-var row = rows[roleIndex];
-var nameEl = row.querySelector('.name');
-var name = schedule[roundIndex][roles[roleIndex]];
-setTimeout(function(){
-nameEl.textContent = name;
-nameEl.classList.remove('placeholder');
-row.classList.add('reveal');
-setTimeout(function(){ row.classList.remove('reveal'); }, 240);
-}, when);
-})(rIdx, i, delay);
-delay += step;
+
+/* スロット風アニメ */
+function rollName(el, finalName, duration, pool){
+  duration = duration || 900;
+  pool = pool && pool.length ? pool : [finalName];
+  var start = performance.now ? performance.now() : Date.now();
+  var handle;
+  function step(){
+    var now = performance.now ? performance.now() : Date.now();
+    var t = now - start;
+    if (t >= duration){
+      el.textContent = finalName;
+      el.classList.remove('placeholder');
+      cancelAnimationFrame(handle);
+      return;
+    }
+    var idx = rngInt(pool.length);
+    el.textContent = pool[idx];
+    handle = requestAnimationFrame(step);
+  }
+  handle = requestAnimationFrame(step);
 }
+
+/* 紙吹雪（小さめ） */
+function spawnConfetti(count){
+  if (!isMotionOk()) return;
+  var colors = ['#60a5fa','#3b82f6','#10b981','#34d399','#f59e0b','#ef4444','#8b5cf6'];
+  var n = count || 40;
+  for (var i=0;i<n;i++){
+    var d = document.createElement('div');
+    d.className = 'confetti-piece';
+    var left = Math.random()*100;
+    d.style.left = left + 'vw';
+    d.style.background = colors[rngInt(colors.length)];
+    d.style.animationDuration = (900 + rngInt(600)) + 'ms';
+    d.style.transform = 'rotate(' + rngInt(360) + 'deg)';
+    document.body.appendChild(d);
+    (function(node){
+      setTimeout(function(){ if (node && node.parentNode) node.parentNode.removeChild(node); }, 1400);
+    })(d);
+  }
 }
+
+/* 結果の描画（スロット風＋紙吹雪対応） */
+function revealSchedule(schedule, roles, namesPool){
+  var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
+  var step = 220;
+  var baseDelay = 160;
+  var idxGlobal = 0;
+  var totalItems = cards.length * roles.length;
+
+  for (var rIdx=0; rIdx<cards.length; rIdx++){
+    var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
+    for (var i=0; i<roles.length; i++){
+      (function(roundIndex, roleIndex, when, globalIndex){
+        var row = rows[roleIndex];
+        var nameEl = row.querySelector('.name');
+        var finalName = schedule[roundIndex][roles[roleIndex]];
+        setTimeout(function(){
+          if (isMotionOk()){
+            rollName(nameEl, finalName, 900 + rngInt(200), namesPool);
+          }else{
+            nameEl.textContent = finalName;
+            nameEl.classList.remove('placeholder');
+          }
+          row.classList.add('reveal');
+          setTimeout(function(){ row.classList.remove('reveal'); }, 240);
+        }, when);
+      })(rIdx, i, baseDelay + (idxGlobal*step), idxGlobal);
+      idxGlobal++;
+    }
+  }
+  // 紙吹雪（全表示完了後に）
+  var totalDelay = baseDelay + (totalItems*step) + 1000;
+  if (effectsEnabled){
+    setTimeout(function(){ spawnConfetti(48); }, totalDelay);
+  }
 }
 
 function scheduleToText(schedule, roles){
-var lines = [];
-for (var r=0; r<schedule.length; r++){
-lines.push('第' + (r+1) + '回');
-for (var i=0; i<roles.length; i++){
-var role = roles[i];
-lines.push('- ' + role + ': ' + schedule[r][role]);
-}
-if (r < schedule.length - 1) lines.push('');
-}
-return lines.join('\n');
+  var lines = [];
+  for (var r=0; r<schedule.length; r++){
+    lines.push('第' + (r+1) + '回');
+    for (var i=0; i<roles.length; i++){
+      var role = roles[i];
+      lines.push('- ' + role + ': ' + schedule[r][role]);
+    }
+    if (r < schedule.length - 1) lines.push('');
+  }
+  return lines.join('\n');
 }
 
 var lastScheduleText = '';
 function draw(){
-errEl.style.display = 'none';
-if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
+  errEl.style.display = 'none';
+  if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
 
-var names = getFilledNames(); // 空欄を除去して2〜3名を取得
-var msg = validate(names);
-if (msg){
-errEl.textContent = msg;
-errEl.style.display = 'block';
-return;
+  var names = getFilledNames(); // 空欄を除去して2〜3名を取得
+  var msg = validate(names);
+  if (msg){
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var currRoles = getRolesForCount(names.length);
+  var schedule = genRotationSchedule(names, currRoles);
+
+  // 人数に応じたプレースホルダー（2名なら2回、3名なら3回）
+  renderPlaceholders(names.length, currRoles);
+
+  // スロット風アニメまたは即時反映
+  setTimeout(function(){
+    revealSchedule(schedule, currRoles, names);
+  }, 180);
+
+  redrawBtn.disabled = false;
+  copyBtn.disabled = false;
+
+  lastScheduleText = scheduleToText(schedule, currRoles);
+  copyBtn.dataset.text = lastScheduleText;
 }
 
-var currRoles = getRolesForCount(names.length);
-var schedule = genRotationSchedule(names, currRoles);
-
-// 人数に応じたプレースホルダー（2名なら2回、3名なら3回）
-renderPlaceholders(names.length, currRoles);
-setTimeout(function(){ revealSchedule(schedule, currRoles); }, 180);
-
-redrawBtn.disabled = false;
-copyBtn.disabled = false;
-
-lastScheduleText = scheduleToText(schedule, currRoles);
-copyBtn.dataset.text = lastScheduleText;
-}
-
-// イベント
+/* イベント */
 drawBtn.addEventListener('click', draw);
 redrawBtn.addEventListener('click', draw);
 copyBtn.addEventListener('click', function(){
-var text = copyBtn.dataset.text || lastScheduleText || '';
-try{
-if (navigator.clipboard && navigator.clipboard.writeText){
-navigator.clipboard.writeText(text).then(function(){
-var old = copyBtn.textContent;
-copyBtn.textContent = 'コピーしました！';
-setTimeout(function(){ copyBtn.textContent = old; }, 1300);
-}, function(){ throw new Error('Clipboard API failed'); });
-} else {
-var ta = document.createElement('textarea');
-ta.value = text; document.body.appendChild(ta);
-ta.select(); document.execCommand('copy');
-document.body.removeChild(ta);
-var old2 = copyBtn.textContent;
-copyBtn.textContent = 'コピーしました！';
-setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
-}
-} catch(e){
-alert('コピーに失敗しました。手動でコピーしてください。');
-}
+  var text = copyBtn.dataset.text || lastScheduleText || '';
+  try{
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        var old = copyBtn.textContent;
+        copyBtn.textContent = 'コピーしました！';
+        setTimeout(function(){ copyBtn.textContent = old; }, 1300);
+      }, function(){ throw new Error('Clipboard API failed'); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+      var old2 = copyBtn.textContent;
+      copyBtn.textContent = 'コピーしました！';
+      setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
+    }
+  } catch(e){
+    alert('コピーに失敗しました。手動でコピーしてください。');
+  }
 });
 
-// 初期表示
+/* 初期表示 */
 function init(){
-renderPlaceholders(3, ROLES3);
-setPreset(25, 0);
-renderTime(remainingMs);
-updateTimeNote();
+  renderPlaceholders(3, ROLES3);
+  setPreset(25, 0);
+  renderTime(remainingMs);
+  updateTimeNote();
 }
 init();
 
 })();
 </script>
 
-</body> </html>
+</body>
+</html>
