@@ -535,16 +535,19 @@ function setPopupBtnText(){
 }
 function openPopup(){
   if (isPopupOpen()){ popupWin.focus(); return; }
-  // 追加: ウィンドウサイズ
+  // ウィンドウサイズ
 var w = 280, h = 200;
 
-// 追加: 画面の右上座標を計算（OSのメニューバー等を考慮して avail を優先）
+// 画面の左下座標を計算（OSのメニューバー等を考慮して avail を優先）
 var s = window.screen || {};
 var availLeft = (typeof s.availLeft === 'number') ? s.availLeft : 0;
 var availTop = (typeof s.availTop === 'number') ? s.availTop : 0;
 var availWidth = (typeof s.availWidth === 'number') ? s.availWidth : (s.width || 0);
-var left = availLeft + Math.max(0, availWidth - w);
-var top = availTop;
+var availHeight = (typeof s.availHeight === 'number') ? s.availHeight : (s.height || 0);
+
+// 左寄せ（availLeft）、下寄せ（availTop + availHeight - h）
+var left = availLeft;
+var top = availTop + Math.max(0, availHeight - h);
 
 // ここを差し替え
 popupWin = window.open(
