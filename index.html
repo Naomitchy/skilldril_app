@@ -183,7 +183,7 @@ button{
     <h2 id="consentTitle">合意の確認</h2>
     <p>本アプリは、コーチングのスキルドリルを「効率的に・遊び心をもって」行うための場づくりを支援します。安心・安全な学びのため、以下に同意のうえ開始してください。</p>
     <ul class="bullet">
-      <li><strong>守秘義務</strong>: ここで話された内容は場の外に持ち出しません。</li>
+      <li><strong>守秘義務</strong>: ここで話された内容は相手の了承なく場の外に持ち出しません。</li>
       <li><strong>学びと実験の場</strong>: 完璧さではなく学び・挑戦を尊重します。うまくいかないことも実験の一部です。</li>
       <li><strong>共に創る</strong>: 相互承認・時間厳守・フィードフォワードで、場を一緒に良くしていきます。</li>
     </ul>
@@ -199,7 +199,6 @@ button{
     <div class="logo" aria-hidden="true">Co</div>
     <div>
       <h1>Coaching スキルドリルアプリ</h1>
-      <!-- 「初回のみランダム…」の説明文は削除 -->
     </div>
   </header>
 
@@ -262,10 +261,24 @@ button{
       <div class="grow"></div>
     </div>
 
+    <!-- 呼鈴（プリアラーム）設定 -->
+    <div class="custom-row" aria-label="呼鈴設定">
+      <span class="note">呼鈴設定:</span>
+      <label for="chimeToggle" class="fx-row" style="margin:0;gap:6px;align-items:center">
+        <input type="checkbox" id="chimeToggle" checked>
+        <span>有効にする</span>
+      </label>
+      <span class="note">鳴らすタイミング:</span>
+      <input id="chimeM" class="num" type="number" min="0" max="600" step="1" value="3" aria-label="分前"> 分前
+      <input id="chimeS" class="num" type="number" min="0" max="59" step="1" value="0" aria-label="秒"> 秒
+      <button id="applyChime" class="secondary">呼鈴設定を適用</button>
+    </div>
+
     <div class="timer-wrap" style="margin-top:10px">
       <div id="timerFace" class="timer-face">
-        <div id="time" class="time" aria-live="polite">25:00</div>
-        <div id="timeNote" class="timer-sub">選択時間: 25分 0秒</div>
+        <div id="time" class="time" aria-live="polite">25:00</div> 
+        <div id="timeNote" class="timer-sub">選択時間: 25分 0秒</div> 
+        <div id="chimeNote" class="timer-sub" aria-live="polite"></div> 
         <div id="endMsg" class="timer-end-msg" aria-live="polite">お疲れさま！</div>
       </div>
       <div class="buttons">
@@ -342,8 +355,8 @@ if (p3) p3.value = "";
 /* タイマーDOM */
 var timerFace = document.getElementById('timerFace');
 var timeEl = document.getElementById('time');
-var timeNoteEl = document.getElementById('timeNote');
-var endMsgEl = document.getElementById('endMsg');
+var chimeNoteEl = document.getElementById('chimeNote'); // これを追加
+var endMsgEl = document.getElementById('endMsg'); // 二重定義も解消
 var startPauseBtn = document.getElementById('startPause');
 var resetBtn = document.getElementById('resetTimer');
 var popupBtn = document.getElementById('popupBtn');
@@ -352,6 +365,12 @@ var mInput = document.getElementById('mInput');
 var sInput = document.getElementById('sInput');
 var applyCustomBtn = document.getElementById('applyCustom');
 
+/* 呼鈴（プリアラーム）DOM */
+var chimeToggle = document.getElementById('chimeToggle');
+var chimeMInput = document.getElementById('chimeM');
+var chimeSInput = document.getElementById('chimeS');
+var applyChimeBtn = document.getElementById('applyChime');
+
 /* タイマー状態（デフォルト25:00） */
 var selMin = 25, selSec = 0;
 var didEndNotify = false; // 終了通知（ビープ等）を一度だけ行ったか
@@ -359,7 +378,22 @@ var running = false;
 var remainingMs = (selMin*60 + selSec) * 1000;
 var endAt = 0;
 var rafId = 0;
-// 追加: ポップアップから参照するための状態ゲッター
+
+/* 呼鈴（プリアラーム）状態と保存キー */
+var CHIME_ENABLED_KEY = 'chimeEnabled';
+var CHIME_MIN_KEY = 'chimeBeforeMin';
+var CHIME_SEC_KEY = 'chimeBeforeSec';
+var chimeEnabled = true; // 既定ON
+var chimeBeforeMs = 3*60*1000; // 3分（既定）
+var chimeFired = false;
+var chimeTimerId = 0;
+var endTimerId = 0;
+
+/* タイマー設定の保存/復元 */
+var TIMER_MIN_KEY = 'timerSelMin';
+var TIMER_SEC_KEY = 'timerSelSec';
+
+/* ポップアップから参照するための状態ゲッター */
 window.getTimerState = function(){
 return {
 running: running,
@@ -372,30 +406,59 @@ totalMs: (selMin*60 + selSec) * 1000
 };
 };
 
-// 追加: タイマー選択の保存/復元
-var TIMER_MIN_KEY = 'timerSelMin';
-var TIMER_SEC_KEY = 'timerSelSec';
-
+/* 保存・復元（タイマー選択） */
 function saveTimerSelection(){
 try{
 localStorage.setItem(TIMER_MIN_KEY, String(selMin));
 localStorage.setItem(TIMER_SEC_KEY, String(selSec));
 }catch(_){}
 }
-
 function restoreTimerSelection(){
 try{
 var m = parseInt(localStorage.getItem(TIMER_MIN_KEY), 10);
 var s = parseInt(localStorage.getItem(TIMER_SEC_KEY), 10);
-if (isNaN(m)) return false; // 保存が無い（または壊れている）場合
+if (isNaN(m)) return false;
 if (isNaN(s)) s = 0;
-setPreset(m, s); // 復元
+setPreset(m, s);
 return true;
 }catch(_){
 return false;
 }
 }
 
+/* 保存・復元（呼鈴設定） */
+function saveChimeSettings(){
+  try{
+    localStorage.setItem(CHIME_ENABLED_KEY, chimeEnabled ? '1' : '0');
+    var beforeSec = Math.max(0, Math.floor(chimeBeforeMs/1000));
+    var m = Math.floor(beforeSec/60);
+    var s = beforeSec%60;
+    localStorage.setItem(CHIME_MIN_KEY, String(m));
+    localStorage.setItem(CHIME_SEC_KEY, String(s));
+  }catch(_){}
+}
+function restoreChimeSettings(){
+  try{
+    var en = localStorage.getItem(CHIME_ENABLED_KEY);
+    chimeEnabled = (en === null) ? true : (en === '1');
+    var m = parseInt(localStorage.getItem(CHIME_MIN_KEY), 10);
+    var s = parseInt(localStorage.getItem(CHIME_SEC_KEY), 10);
+    if (isNaN(m)) m = 3;
+    if (isNaN(s)) s = 0;
+    m = Math.max(0, Math.min(600, m|0));
+    s = Math.max(0, Math.min(59, s|0));
+    chimeBeforeMs = (m*60 + s) * 1000;
+    if (chimeToggle) chimeToggle.checked = !!chimeEnabled;
+    if (chimeMInput) chimeMInput.value = String(m);
+    if (chimeSInput) chimeSInput.value = String(s);
+    updateChimeNote();
+  }catch(_){
+    chimeEnabled = true;
+    chimeBeforeMs = 180000;
+  }
+}
+
+/* プリセットの適用 */
 function setPreset(min, sec){
 selMin = Math.max(0, Math.floor(min||0));
 selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
@@ -409,82 +472,116 @@ remainingMs = (selMin*60 + selSec) * 1000;
 renderTime(remainingMs);
 }
 updateTimeNote();
-
-// 追加: 選択時間を保存
 saveTimerSelection();
+// 呼鈴の状態をリセット（しきい値を再計算するため）
+chimeFired = false;
+if (running){ scheduleAlarms(); } else { clearAlarmTimers(); }
 }
 
 function updateTimeNote(){
-  timeNoteEl.textContent = "選択時間: " + selMin + "分 " + selSec + "秒";
-  updatePopupUI(false);
+timeNoteEl.textContent = "選択時間: " + selMin + "分 " + selSec + "秒";
+updatePopupUI(false);
+}
+
+function formatChimeBefore(ms){
+var totalSec = Math.max(0, Math.round(ms/1000));
+var m = Math.floor(totalSec/60);
+var s = totalSec % 60;
+var parts = [];
+if (m > 0) parts.push(m + '分');
+if (s > 0) parts.push(s + '秒');
+var when = parts.length ? parts.join('') + '前' : '0秒前';
+return when;
+}
+function updateChimeNote(){
+if (!chimeNoteEl) return;
+if (!chimeEnabled){
+chimeNoteEl.textContent = '呼鈴: オフ';
+} else {
+chimeNoteEl.textContent = '呼鈴: ' + formatChimeBefore(chimeBeforeMs);
+}
 }
 
 function renderTime(ms){
-  var neg = ms < 0;
-  var absMs = Math.abs(ms);
-  var totalSec = Math.ceil(absMs / 1000);
-  var m = Math.floor(totalSec / 60);
-  var s = totalSec % 60;
-  var text = (neg ? '-' : '') + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
-  timeEl.textContent = text;
-  updatePopupUI(true);
+var neg = ms < 0;
+var absMs = Math.abs(ms);
+var totalSec = Math.ceil(absMs / 1000);
+var m = Math.floor(totalSec / 60);
+var s = totalSec % 60;
+var text = (neg ? '-' : '') + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+timeEl.textContent = text;
+updatePopupUI(true);
 }
 
 function showEndMessage(){
-  if (!endMsgEl) return;
-  if (effectsEnabled){
-    endMsgEl.classList.add('show');
-    setTimeout(function(){ endMsgEl.classList.remove('show'); }, 2500);
-  }
+if (!endMsgEl) return;
+if (effectsEnabled){
+endMsgEl.classList.add('show');
+setTimeout(function(){ endMsgEl.classList.remove('show'); }, 2500);
+}
 }
 
 function tick(){
-  var now = Date.now();
-  var ms = endAt - now;
-  remainingMs = ms;
-  if (ms <= 0 && !didEndNotify){
-    timerFace.classList.add('ended');
-    timeEl.classList.add('ended');
-    playBeep();
-    if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
-    didEndNotify = true;
-    showEndMessage();
-  }
-  renderTime(ms);
-  if (running){
-    rafId = requestAnimationFrame(tick);
-  }
+var now = Date.now();
+var ms = endAt - now;
+remainingMs = ms;
+if (ms <= 0 && !didEndNotify){
+timerFace.classList.add('ended');
+timeEl.classList.add('ended');
+playBeep();
+if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
+didEndNotify = true;
+showEndMessage();
+}
+renderTime(ms);
+if (running){
+rafId = requestAnimationFrame(tick);
+}
 }
 
-/* オーディオ（終了時ビープ） */
+/* オーディオ（終了時ビープ・呼鈴ビープ） */
 var audioCtx = null;
 function ensureAudio(){
-  if (!audioCtx){
-    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){}
-  }
-  if (audioCtx && audioCtx.state === 'suspended'){
-    audioCtx.resume().catch(function(){});
-  }
+if (!audioCtx){
+try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){}
+}
+if (audioCtx && audioCtx.state === 'suspended'){
+audioCtx.resume().catch(function(){});
+}
+}
+function toneOnce(freq, startAt, dur, peak){
+var t0 = startAt;
+var osc = audioCtx.createOscillator();
+var gain = audioCtx.createGain();
+osc.type = 'sine';
+osc.frequency.setValueAtTime(freq, t0);
+gain.gain.setValueAtTime(0.0001, t0);
+gain.gain.linearRampToValueAtTime(peak, t0 + 0.02);
+gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+osc.connect(gain).connect(audioCtx.destination);
+osc.start(t0);
+osc.stop(t0 + dur + 0.02);
 }
 function playBeep(){
-  if (!audioCtx) return;
-  try{
-    var t0 = audioCtx.currentTime;
-    [0, 0.35].forEach(function(offset){
-      var osc = audioCtx.createOscillator();
-      var gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, t0+offset); // A5
-      gain.gain.setValueAtTime(0, t0+offset);
-      gain.gain.linearRampToValueAtTime(0.18, t0+offset+0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0+offset+0.28);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(t0+offset);
-      osc.stop(t0+offset+0.3);
-    });
-  }catch(_){}
+if (!audioCtx) return;
+try{
+var t0 = audioCtx.currentTime;
+[0, 0.35].forEach(function(offset){
+toneOnce(880, t0+offset, 0.3, 0.18);
+});
+}catch(_){}
 }
-// 追加: 最終到達時の通知を必要に応じて実行
+function playChime(){
+if (!audioCtx) return;
+try{
+var t0 = audioCtx.currentTime;
+// 短い二音で注意喚起（デフォルト3分前など）
+toneOnce(660, t0, 0.18, 0.16);
+toneOnce(990, t0+0.22, 0.18, 0.14);
+}catch(_){}
+}
+
+/* 終了通知の強制発火（バックアップ） */
 function ensureEndFired(){
 var ms = endAt - Date.now();
 remainingMs = ms;
@@ -500,138 +597,197 @@ showEndMessage();
 // ポップアップから呼べるように公開
 window.ensureEndFired = ensureEndFired;
 
-function startTimer(){
-  if (running) return;
-  ensureAudio();
-  timerFace.classList.remove('ended');
-  timeEl.classList.remove('ended');
-  if (endMsgEl) endMsgEl.classList.remove('show');
-  running = true;
-  endAt = Date.now() + remainingMs;
-  startPauseBtn.textContent = '一時停止';
-  updatePopupUI(false);
-  rafId = requestAnimationFrame(tick);
+/* 呼鈴タイマーの管理 */
+function clearAlarmTimers(){
+if (chimeTimerId){ clearTimeout(chimeTimerId); chimeTimerId = 0; }
+if (endTimerId){ clearTimeout(endTimerId); endTimerId = 0; }
 }
-function pauseTimer(){
-  if (!running) return;
-  running = false;
-  cancelAnimationFrame(rafId);
-  remainingMs = endAt - Date.now();
-  startPauseBtn.textContent = '再開';
-  updatePopupUI(false);
+function fireChime(){
+if (chimeFired || !chimeEnabled) return;
+chimeFired = true;
+ensureAudio();
+playChime();
+if (navigator.vibrate) try{ navigator.vibrate([80,40,80]); }catch(_){}
 }
-function resetTimer(){
-  running = false;
-  cancelAnimationFrame(rafId);
-  didEndNotify = false;
-  remainingMs = (selMin*60 + selSec) * 1000;
-  renderTime(remainingMs);
-  startPauseBtn.textContent = '開始';
-  timerFace.classList.remove('ended');
-  timeEl.classList.remove('ended');
-  if (endMsgEl) endMsgEl.classList.remove('show');
+function scheduleAlarms(){
+clearAlarmTimers();
+if (!running) return;
+var now = Date.now();
+var msToEnd = endAt - now;
+if (msToEnd <= 0) return;
+// 終了通知のバックアップ（rAFが止まっても鳴るように）
+endTimerId = setTimeout(ensureEndFired, Math.max(0, msToEnd) + 10);
+// 呼鈴（プリアラーム）
+if (chimeEnabled){
+var delay = msToEnd - chimeBeforeMs;
+if (delay > 0){
+chimeTimerId = setTimeout(function(){ fireChime(); }, delay);
+} else {
+// すでにしきい値を過ぎていれば、未発火なら即時鳴らす
+if (!chimeFired && msToEnd > 0) fireChime();
+}
+}
 }
 
+/* タイマー操作 */
+function startTimer(){
+if (running) return;
+ensureAudio();
+timerFace.classList.remove('ended');
+timeEl.classList.remove('ended');
+if (endMsgEl) endMsgEl.classList.remove('show');
+running = true;
+endAt = Date.now() + remainingMs;
+startPauseBtn.textContent = '一時停止';
+updatePopupUI(false);
+// 呼鈴は再計算
+scheduleAlarms();
+rafId = requestAnimationFrame(tick);
+}
+function pauseTimer(){
+if (!running) return;
+running = false;
+cancelAnimationFrame(rafId);
+remainingMs = endAt - Date.now();
+startPauseBtn.textContent = '再開';
+clearAlarmTimers();
+updatePopupUI(false);
+}
+function resetTimer(){
+running = false;
+cancelAnimationFrame(rafId);
+didEndNotify = false;
+chimeFired = false;
+remainingMs = (selMin*60 + selSec) * 1000;
+renderTime(remainingMs);
+startPauseBtn.textContent = '開始';
+timerFace.classList.remove('ended');
+timeEl.classList.remove('ended');
+if (endMsgEl) endMsgEl.classList.remove('show');
+clearAlarmTimers();
+}
+
+/* イベント: タイマー操作 */
 startPauseBtn.addEventListener('click', function(){ if (running) pauseTimer(); else startTimer(); });
 resetBtn.addEventListener('click', resetTimer);
 chipBtns.forEach(function(btn){
-  btn.addEventListener('click', function(){
-    setPreset(Number(btn.dataset.min), 0);
-    resetTimer();
-    ensureAudio();
-  });
+btn.addEventListener('click', function(){
+setPreset(Number(btn.dataset.min), 0);
+resetTimer();
+ensureAudio();
+});
 });
 applyCustomBtn.addEventListener('click', function(){
-  var m = parseInt(mInput.value,10);
-  var s = parseInt(sInput.value,10);
-  if (isNaN(m)||m<0) m=0;
-  if (isNaN(s)||s<0) s=0;
-  if (s>59) s=59;
-  setPreset(m, s);
-  resetTimer();
-  ensureAudio();
+var m = parseInt(mInput.value,10);
+var s = parseInt(sInput.value,10);
+if (isNaN(m)||m<0) m=0;
+if (isNaN(s)||s<0) s=0;
+if (s>59) s=59;
+setPreset(m, s);
+resetTimer();
+ensureAudio();
 });
+
+ /* イベント: 呼鈴設定 */
+if (chimeToggle){
+chimeToggle.addEventListener('change', function(){
+chimeEnabled = !!chimeToggle.checked;
+saveChimeSettings();
+chimeFired = false;
+updateChimeNote();
+if (running) scheduleAlarms(); else clearAlarmTimers();
+});
+}
+if (applyChimeBtn){
+applyChimeBtn.addEventListener('click', function(){
+var cm = parseInt(chimeMInput.value, 10);
+var cs = parseInt(chimeSInput.value, 10);
+if (isNaN(cm) || cm < 0) cm = 0;
+if (isNaN(cs) || cs < 0) cs = 0;
+if (cs > 59) cs = 59;
+chimeBeforeMs = (cm*60 + cs) * 1000;
+// 正規化してUIへ反映
+chimeMInput.value = String(cm);
+chimeSInput.value = String(cs);
+chimeFired = false;
+saveChimeSettings();
+updateChimeNote();
+if (running) scheduleAlarms();
+});
+}
 
 /* ここから: ポップアップ機能 */
 var popupWin = null;
 var lastPopupUpdate = 0;
 function isPopupOpen(){ return popupWin && !popupWin.closed; }
 function setPopupBtnText(){
-  if (!popupBtn) return;
-  popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示';
+if (!popupBtn) return;
+popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示';
 }
 function openPopup(){
-  if (isPopupOpen()){ popupWin.focus(); return; }
-  // ウィンドウサイズ
+if (isPopupOpen()){ popupWin.focus(); return; }
 var w = 280, h = 200;
 
-// 画面の左下座標を計算（OSのメニューバー等を考慮して avail を優先）
 var s = window.screen || {};
 var availLeft = (typeof s.availLeft === 'number') ? s.availLeft : 0;
 var availTop = (typeof s.availTop === 'number') ? s.availTop : 0;
 var availWidth = (typeof s.availWidth === 'number') ? s.availWidth : (s.width || 0);
 var availHeight = (typeof s.availHeight === 'number') ? s.availHeight : (s.height || 0);
 
-// 左寄せ（availLeft）、下寄せ（availTop + availHeight - h）
 var left = availLeft;
 var top = availTop + Math.max(0, availHeight - h);
 
-// ここを差し替え
 popupWin = window.open(
 '',
 'timer_popup',
 'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',menubar=0,toolbar=0,location=0,status=0,resizable=1'
 );
-
 if (!popupWin){
 alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。');
 return;
 }
-
-// 追加: 一部ブラウザが features の位置指定を無視する場合に備え、moveTo でフォロー
 try { popupWin.moveTo(left, top); } catch (_) {}
-  if (!popupWin){ alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。'); return; }
 
-  popupWin.document.write(
-    '<!doctype html><html><head><meta charset="utf-8">'+
-    '<title>タイマー</title>'+
-    '<style>'+
-    'body{margin:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;color:#1f2937;background:#fff}'+
-    '.p-face{border:1px solid #e5e7eb;border-radius:12px;padding:10px;box-shadow:0 8px 18px rgba(0,0,0,.06)}'+
-    '.p-time{font-variant-numeric:tabular-nums;font-size:42px;font-weight:800;text-align:center}'+
-    '.ended .p-time{color:#ef4444}'+
-    '.p-sub{font-size:12px;color:#6b7280;text-align:center;margin-top:4px}'+
-    '.row{display:flex;gap:8px;margin-top:10px;justify-content:center}'+
-    'button{appearance:none;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-weight:600;background:#fff;cursor:pointer}'+
-    '</style></head><body>'+
-    '<div id="pFace" class="p-face">'+
-    '<div id="pTime" class="p-time">--:--</div>'+
-    '<div id="pNote" class="p-sub"></div>'+
-    '</div>'+
-    '<div class="row">'+
-    '<button id="pToggle">開始</button>'+
-    '<button id="pReset">リセット</button>'+
-    '<button id="pClose">閉じる</button>'+
-    '</div>'+
-    '</body></html>'
-  );
-  popupWin.document.close();
+popupWin.document.write(
+'<!doctype html><html><head><meta charset="utf-8">'+
+'<title>タイマー</title>'+
+'<style>'+
+'body{margin:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;color:#1f2937;background:#fff}'+
+'.p-face{border:1px solid #e5e7eb;border-radius:12px;padding:10px;box-shadow:0 8px 18px rgba(0,0,0,.06)}'+
+'.p-time{font-variant-numeric:tabular-nums;font-size:42px;font-weight:800;text-align:center}'+
+'.ended .p-time{color:#ef4444}'+
+'.p-sub{font-size:12px;color:#6b7280;text-align:center;margin-top:4px}'+
+'.row{display:flex;gap:8px;margin-top:10px;justify-content:center}'+
+'button{appearance:none;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-weight:600;background:#fff;cursor:pointer}'+
+'</style></head><body>'+
+'<div id="pFace" class="p-face">'+
+'<div id="pTime" class="p-time">--:--</div>'+
+'<div id="pNote" class="p-sub"></div>'+
+'</div>'+
+'<div class="row">'+
+'<button id="pToggle">開始</button>'+
+'<button id="pReset">リセット</button>'+
+'<button id="pClose">閉じる</button>'+
+'</div>'+
+'</body></html>'
+);
+popupWin.document.close();
 
-  popupWin.addEventListener('beforeunload', function(){
-    setTimeout(function(){ popupWin = null; setPopupBtnText(); }, 0);
-  });
+popupWin.addEventListener('beforeunload', function(){
+setTimeout(function(){ popupWin = null; setPopupBtnText(); }, 0);
+});
 
-  popupWin.document.getElementById('pToggle').addEventListener('click', function(){
-    if (running) pauseTimer(); else startTimer();
-  });
-  popupWin.document.getElementById('pReset').addEventListener('click', function(){ resetTimer(); });
-  popupWin.document.getElementById('pClose').addEventListener('click', function(){ popupWin.close(); });
-  popupWin.addEventListener('keydown', function(e){
-    if (e.key === ' '){
-      e.preventDefault();
-      if (running) pauseTimer(); else startTimer();
-    }
-  });
+popupWin.document.getElementById('pToggle').addEventListener('click', function(){
+if (running) pauseTimer(); else startTimer();
+});
+popupWin.document.getElementById('pReset').addEventListener('click', function(){ resetTimer(); });
+popupWin.document.getElementById('pClose').addEventListener('click', function(){ popupWin.close(); });
+popupWin.addEventListener('keydown', function(e){
+if (e.key === ' '){
+e.preventDefault();
+if (running) pauseTimer(); else startTimer();
+}
+});
 var boot = "(function(){\n" +
 " var d=document;\n" +
 " var pTime=d.getElementById('pTime');\n" +
@@ -660,35 +816,34 @@ var boot = "(function(){\n" +
 var sc = popupWin.document.createElement('script');
 sc.textContent = boot;
 popupWin.document.body.appendChild(sc);
-  setPopupBtnText();
-  updatePopupUI(false);
+setPopupBtnText();
+updatePopupUI(false);
 }
 function closePopup(){ if (isPopupOpen()) popupWin.close(); }
 function updatePopupUI(throttle){
-  if (!isPopupOpen()) return;
-  var now = (window.performance && performance.now) ? performance.now() : Date.now();
-  if (throttle && (now - lastPopupUpdate) < 160) return;
-  lastPopupUpdate = now;
+if (!isPopupOpen()) return;
+var now = (window.performance && performance.now) ? performance.now() : Date.now();
+if (throttle && (now - lastPopupUpdate) < 160) return;
+lastPopupUpdate = now;
 
-  var d = popupWin.document;
-  var pTime = d.getElementById('pTime');
-  var pNote = d.getElementById('pNote');
-  var pToggle = d.getElementById('pToggle');
-  var pFace = d.getElementById('pFace');
+var d = popupWin.document;
+var pTime = d.getElementById('pTime');
+var pNote = d.getElementById('pNote');
+var pToggle = d.getElementById('pToggle');
+var pFace = d.getElementById('pFace');
 
-  if (pTime) pTime.textContent = timeEl.textContent;
-  if (pNote) pNote.textContent = timeNoteEl.textContent;
-  if (pToggle) pToggle.textContent = startPauseBtn.textContent;
-
-  if (pFace){
-    if (timeEl.classList.contains('ended')) pFace.classList.add('ended');
-    else pFace.classList.remove('ended');
-  }
+if (pTime) pTime.textContent = timeEl.textContent;
+if (pNote) pNote.textContent = timeNoteEl.textContent + (chimeNoteEl && chimeNoteEl.textContent ? ' ・ ' + chimeNoteEl.textContent : '');
+if (pToggle) pToggle.textContent = startPauseBtn.textContent;
+if (pFace){
+if (timeEl.classList.contains('ended')) pFace.classList.add('ended');
+else pFace.classList.remove('ended');
+}
 }
 if (popupBtn){
-  popupBtn.addEventListener('click', function(){
-    if (isPopupOpen()) closePopup(); else openPopup();
-  });
+popupBtn.addEventListener('click', function(){
+if (isPopupOpen()) closePopup(); else openPopup();
+});
 }
 window.addEventListener('beforeunload', function(){ if (isPopupOpen()) popupWin.close(); });
 /* ここまで: ポップアップ機能 */
@@ -701,243 +856,239 @@ return [
 (p3 && p3.value ? p3.value.trim() : "")
 ];
 }
-// 空欄を除いた実入力（2〜3名）を取得
-// 以下を、前回提示したコードの「// 空欄を除いた実入力（2〜3名）を取得」の直後から末尾にそのまま追記してください。
-
 function getFilledNames(){
 return getNames().map(function(n){ return (n||"").trim(); }).filter(function(n){ return n !== ""; });
 }
-// 人数に応じて役割を返す
 function getRolesForCount(n){ return n === 2 ? ROLES2 : ROLES3; }
-// バリデーション（2〜3名、重複なし）
 function validate(names){
-  if (names.length < 2) return "参加者は2名以上で入力してください。";
-  if (names.length > 3) return "参加者は最大3名までです。";
-  for (var i=0;i<names.length;i++){
-    for (var j=i+1;j<names.length;j++){
-      if (names[i] === names[j]) return "参加者名が重複しています。区別できる名前にしてください。";
-    }
-  }
-  return "";
+if (names.length < 2) return "参加者は2名以上で入力してください。";
+if (names.length > 3) return "参加者は最大3名までです。";
+for (var i=0;i<names.length;i++){
+for (var j=i+1;j<names.length;j++){
+if (names[i] === names[j]) return "参加者名が重複しています。区別できる名前にしてください。";
+}
+}
+return "";
 }
 function rngInt(maxExclusive){
-  if (window.crypto && window.crypto.getRandomValues){
-    var a = new Uint32Array(1);
-    window.crypto.getRandomValues(a);
-    return a[0] % maxExclusive;
-  }
-  return Math.floor(Math.random() * maxExclusive);
+if (window.crypto && window.crypto.getRandomValues){
+var a = new Uint32Array(1);
+window.crypto.getRandomValues(a);
+return a[0] % maxExclusive;
+}
+return Math.floor(Math.random() * maxExclusive);
 }
 function shuffle(arr){
-  var a = arr.slice();
-  for (var i=a.length-1; i>0; i--){
-    var j = rngInt(i+1); var t=a[i]; a[i]=a[j]; a[j]=t;
-  }
-  return a;
+var a = arr.slice();
+for (var i=a.length-1; i>0; i--){
+var j = rngInt(i+1); var t=a[i]; a[i]=a[j]; a[j]=t;
 }
-// 人数・役割に応じてランダムで開始してローテーション
+return a;
+}
 function genRotationSchedule(names, roles){
-  var rounds = names.length; // 2名なら2ラウンド、3名なら3ラウンド
-  var first = shuffle(names);
-  var out = [];
-  for (var r=0; r<rounds; r++){
-    var m = {};
-    for (var i=0; i<roles.length; i++){
-      m[roles[i]] = first[(i + r) % names.length];
-    }
-    out.push(m);
-  }
-  return out;
+var rounds = names.length; // 2名なら2ラウンド、3名なら3ラウンド
+var first = shuffle(names);
+var out = [];
+for (var r=0; r<rounds; r++){
+var m = {};
+for (var i=0; i<roles.length; i++){
+m[roles[i]] = first[(i + r) % names.length];
+}
+out.push(m);
+}
+return out;
 }
 function clearResults(){ resultsEl.innerHTML = ""; }
 function buildRoundCard(index, roles){
-  var wrap = document.createElement('div'); wrap.className = 'round';
-  var h = document.createElement('h3');
-  var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = '第' + (index+1) + '回';
-  h.textContent = '割り当て'; h.prepend(badge);
-  wrap.appendChild(h);
-  var list = document.createElement('div'); list.className = 'assign';
-  for (var i=0;i<roles.length;i++){
-    var row = document.createElement('div'); row.className = 'role';
-    var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = roles[i];
-    var name = document.createElement('div'); name.className = 'name placeholder'; name.textContent = '？？？';
-    row.appendChild(tag); row.appendChild(name); list.appendChild(row);
-  }
-  wrap.appendChild(list);
-  return wrap;
+var wrap = document.createElement('div'); wrap.className = 'round';
+var h = document.createElement('h3');
+var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = '第' + (index+1) + '回';
+h.textContent = '割り当て'; h.prepend(badge);
+wrap.appendChild(h);
+var list = document.createElement('div'); list.className = 'assign';
+for (var i=0;i<roles.length;i++){
+var row = document.createElement('div'); row.className = 'role';
+var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = roles[i];
+var name = document.createElement('div'); name.className = 'name placeholder'; name.textContent = '？？？';
+row.appendChild(tag); row.appendChild(name); list.appendChild(row);
+}
+wrap.appendChild(list);
+return wrap;
 }
 function renderPlaceholders(roundCount, roles){
-  clearResults();
-  for (var r=0; r<roundCount; r++){ resultsEl.appendChild(buildRoundCard(r, roles)); }
+clearResults();
+for (var r=0; r<roundCount; r++){ resultsEl.appendChild(buildRoundCard(r, roles)); }
 }
 
 /* スロット風アニメ */
 function rollName(el, finalName, duration, pool){
-  duration = duration || 900;
-  pool = pool && pool.length ? pool : [finalName];
-  var start = performance.now ? performance.now() : Date.now();
-  var handle;
-  function step(){
-    var now = performance.now ? performance.now() : Date.now();
-    var t = now - start;
-    if (t >= duration){
-      el.textContent = finalName;
-      el.classList.remove('placeholder');
-      cancelAnimationFrame(handle);
-      return;
-    }
-    var idx = rngInt(pool.length);
-    el.textContent = pool[idx];
-    handle = requestAnimationFrame(step);
-  }
-  handle = requestAnimationFrame(step);
+duration = duration || 900;
+pool = pool && pool.length ? pool : [finalName];
+var start = performance.now ? performance.now() : Date.now();
+var handle;
+function step(){
+var now = performance.now ? performance.now() : Date.now();
+var t = now - start;
+if (t >= duration){
+el.textContent = finalName;
+el.classList.remove('placeholder');
+cancelAnimationFrame(handle);
+return;
+}
+var idx = rngInt(pool.length);
+el.textContent = pool[idx];
+handle = requestAnimationFrame(step);
+}
+handle = requestAnimationFrame(step);
 }
 
 /* 紙吹雪（小さめ） */
 function spawnConfetti(count){
-  if (!isMotionOk()) return;
-  var colors = ['#60a5fa','#3b82f6','#10b981','#34d399','#f59e0b','#ef4444','#8b5cf6'];
-  var n = count || 40;
-  for (var i=0;i<n;i++){
-    var d = document.createElement('div');
-    d.className = 'confetti-piece';
-    var left = Math.random()*100;
-    d.style.left = left + 'vw';
-    d.style.background = colors[rngInt(colors.length)];
-    d.style.animationDuration = (900 + rngInt(600)) + 'ms';
-    d.style.transform = 'rotate(' + rngInt(360) + 'deg)';
-    document.body.appendChild(d);
-    (function(node){
-      setTimeout(function(){ if (node && node.parentNode) node.parentNode.removeChild(node); }, 1400);
-    })(d);
-  }
+if (!isMotionOk()) return;
+var colors = ['#60a5fa','#3b82f6','#10b981','#34d399','#f59e0b','#ef4444','#8b5cf6'];
+var n = count || 40;
+for (var i=0;i<n;i++){
+var d = document.createElement('div');
+d.className = 'confetti-piece';
+var left = Math.random()*100;
+d.style.left = left + 'vw';
+d.style.background = colors[rngInt(colors.length)];
+d.style.animationDuration = (900 + rngInt(600)) + 'ms';
+d.style.transform = 'rotate(' + rngInt(360) + 'deg)';
+document.body.appendChild(d);
+(function(node){
+setTimeout(function(){ if (node && node.parentNode) node.parentNode.removeChild(node); }, 1400);
+})(d);
+}
 }
 
 /* 結果の描画（スロット風＋紙吹雪対応） */
 function revealSchedule(schedule, roles, namesPool){
-  var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
-  var step = 220;
-  var baseDelay = 160;
-  var idxGlobal = 0;
-  var totalItems = cards.length * roles.length;
+var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
+var step = 220;
+var baseDelay = 160;
+var idxGlobal = 0;
+var totalItems = cards.length * roles.length;
 
-  for (var rIdx=0; rIdx<cards.length; rIdx++){
-    var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
-    for (var i=0; i<roles.length; i++){
-      (function(roundIndex, roleIndex, when, globalIndex){
-        var row = rows[roleIndex];
-        var nameEl = row.querySelector('.name');
-        var finalName = schedule[roundIndex][roles[roleIndex]];
-        setTimeout(function(){
-          if (isMotionOk()){
-            rollName(nameEl, finalName, 900 + rngInt(200), namesPool);
-          }else{
-            nameEl.textContent = finalName;
-            nameEl.classList.remove('placeholder');
-          }
-          row.classList.add('reveal');
-          setTimeout(function(){ row.classList.remove('reveal'); }, 240);
-        }, when);
-      })(rIdx, i, baseDelay + (idxGlobal*step), idxGlobal);
-      idxGlobal++;
-    }
-  }
-  // 紙吹雪（全表示完了後に）
-  var totalDelay = baseDelay + (totalItems*step) + 1000;
-  if (effectsEnabled){
-    setTimeout(function(){ spawnConfetti(48); }, totalDelay);
-  }
+for (var rIdx=0; rIdx<cards.length; rIdx++){
+var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
+for (var i=0; i<roles.length; i++){
+(function(roundIndex, roleIndex, when, globalIndex){
+var row = rows[roleIndex];
+var nameEl = row.querySelector('.name');
+var finalName = schedule[roundIndex][roles[roleIndex]];
+setTimeout(function(){
+if (isMotionOk()){
+rollName(nameEl, finalName, 900 + rngInt(200), namesPool);
+}else{
+nameEl.textContent = finalName;
+nameEl.classList.remove('placeholder');
+}
+row.classList.add('reveal');
+setTimeout(function(){ row.classList.remove('reveal'); }, 240);
+}, when);
+})(rIdx, i, baseDelay + (idxGlobal*step), idxGlobal);
+idxGlobal++;
+}
+}
+var totalDelay = baseDelay + (totalItems*step) + 1000;
+if (effectsEnabled){
+setTimeout(function(){ spawnConfetti(48); }, totalDelay);
+}
 }
 
 function scheduleToText(schedule, roles){
-  var lines = [];
-  for (var r=0; r<schedule.length; r++){
-    lines.push('第' + (r+1) + '回');
-    for (var i=0; i<roles.length; i++){
-      var role = roles[i];
-      lines.push('- ' + role + ': ' + schedule[r][role]);
-    }
-    if (r < schedule.length - 1) lines.push('');
-  }
-  return lines.join('\n');
+var lines = [];
+for (var r=0; r<schedule.length; r++){
+lines.push('第' + (r+1) + '回');
+for (var i=0; i<roles.length; i++){
+var role = roles[i];
+lines.push('- ' + role + ': ' + schedule[r][role]);
+}
+if (r < schedule.length - 1) lines.push('');
+}
+return lines.join('\n');
 }
 
 var lastScheduleText = '';
 function draw(){
-  errEl.style.display = 'none';
-  if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
+errEl.style.display = 'none';
+if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
 
-  var names = getFilledNames(); // 空欄を除去して2〜3名を取得
-  var msg = validate(names);
-  if (msg){
-    errEl.textContent = msg;
-    errEl.style.display = 'block';
-    return;
-  }
-
-  var currRoles = getRolesForCount(names.length);
-  var schedule = genRotationSchedule(names, currRoles);
-
-  // 人数に応じたプレースホルダー（2名なら2回、3名なら3回）
-  renderPlaceholders(names.length, currRoles);
-
-  // スロット風アニメまたは即時反映
-  setTimeout(function(){
-    revealSchedule(schedule, currRoles, names);
-  }, 180);
-
-  redrawBtn.disabled = false;
-  copyBtn.disabled = false;
-
-  lastScheduleText = scheduleToText(schedule, currRoles);
-  copyBtn.dataset.text = lastScheduleText;
+var names = getFilledNames();
+var msg = validate(names);
+if (msg){
+errEl.textContent = msg;
+errEl.style.display = 'block';
+return;
 }
 
-/* イベント */
+var currRoles = getRolesForCount(names.length);
+var schedule = genRotationSchedule(names, currRoles);
+
+renderPlaceholders(names.length, currRoles);
+
+setTimeout(function(){
+revealSchedule(schedule, currRoles, names);
+}, 180);
+
+redrawBtn.disabled = false;
+copyBtn.disabled = false;
+
+lastScheduleText = scheduleToText(schedule, currRoles);
+copyBtn.dataset.text = lastScheduleText;
+}
+
+/* イベント（抽選系） */
 drawBtn.addEventListener('click', draw);
 redrawBtn.addEventListener('click', draw);
 copyBtn.addEventListener('click', function(){
-  var text = copyBtn.dataset.text || lastScheduleText || '';
-  try{
-    if (navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){
-        var old = copyBtn.textContent;
-        copyBtn.textContent = 'コピーしました！';
-        setTimeout(function(){ copyBtn.textContent = old; }, 1300);
-      }, function(){ throw new Error('Clipboard API failed'); });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy');
-      document.body.removeChild(ta);
-      var old2 = copyBtn.textContent;
-      copyBtn.textContent = 'コピーしました！';
-      setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
-    }
-  } catch(e){
-    alert('コピーに失敗しました。手動でコピーしてください。');
-  }
+var text = copyBtn.dataset.text || lastScheduleText || '';
+try{
+if (navigator.clipboard && navigator.clipboard.writeText){
+navigator.clipboard.writeText(text).then(function(){
+var old = copyBtn.textContent;
+copyBtn.textContent = 'コピーしました！';
+setTimeout(function(){ copyBtn.textContent = old; }, 1300);
+}, function(){ throw new Error('Clipboard API failed'); });
+} else {
+var ta = document.createElement('textarea');
+ta.value = text; document.body.appendChild(ta);
+ta.select(); document.execCommand('copy');
+document.body.removeChild(ta);
+var old2 = copyBtn.textContent;
+copyBtn.textContent = 'コピーしました！';
+setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
+}
+} catch(e){
+alert('コピーに失敗しました。手動でコピーしてください。');
+}
 });
 
 /* 初期表示 */
 function init(){
 renderPlaceholders(3, ROLES3);
 
-// 追加: 保存されたタイマー設定の復元を試みる
+// 呼鈴（プリアラーム）設定を復元
+restoreChimeSettings();
+
+// 保存されたタイマー設定の復元（無ければ 25:00）
 if (!restoreTimerSelection()){
-// 保存が無い場合はデフォルト25:00
 setPreset(25, 0);
 }
 
-// setPreset 内で renderTime と updateTimeNote を既に実行しているため、
-// 下の2行は残しておいても動作に支障はありません（不要なら削除OK）。
+// setPreset 内で renderTime と updateTimeNote を実行しているが冪等のため残す
 renderTime(remainingMs);
 updateTimeNote();
+updateChimeNote();
+
+
+// ポップアップボタンの表示更新
+setPopupBtnText();
 }
 init();
 
 })();
 </script>
 
-</body>
-</html>
+</body> </html>
