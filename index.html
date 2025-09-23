@@ -355,8 +355,9 @@ if (p3) p3.value = "";
 /* タイマーDOM */
 var timerFace = document.getElementById('timerFace');
 var timeEl = document.getElementById('time');
-var chimeNoteEl = document.getElementById('chimeNote'); // これを追加
-var endMsgEl = document.getElementById('endMsg'); // 二重定義も解消
+var timeNoteEl = document.getElementById('timeNote'); // これを追加
+var chimeNoteEl = document.getElementById('chimeNote');
+var endMsgEl = document.getElementById('endMsg');
 var startPauseBtn = document.getElementById('startPause');
 var resetBtn = document.getElementById('resetTimer');
 var popupBtn = document.getElementById('popupBtn');
@@ -833,14 +834,14 @@ var pToggle = d.getElementById('pToggle');
 var pFace = d.getElementById('pFace');
 
 if (pTime) pTime.textContent = timeEl.textContent;
-if (pNote) pNote.textContent = timeNoteEl.textContent + (chimeNoteEl && chimeNoteEl.textContent ? ' ・ ' + chimeNoteEl.textContent : '');
+var baseNote = timeNoteEl ? timeNoteEl.textContent : '';
+if (pNote) pNote.textContent = baseNote; // ← 選択時間のみ表示
 if (pToggle) pToggle.textContent = startPauseBtn.textContent;
 if (pFace){
 if (timeEl.classList.contains('ended')) pFace.classList.add('ended');
 else pFace.classList.remove('ended');
 }
-}
-if (popupBtn){
+}if (popupBtn){
 popupBtn.addEventListener('click', function(){
 if (isPopupOpen()) closePopup(); else openPopup();
 });
