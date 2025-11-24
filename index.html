@@ -3,182 +3,139 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Coaching スキルドリルアプリ</title>
+<title>Coaching スキルドリル - Storm Edition</title>
 <style>
+/* --- ベーススタイル --- */
 :root{
-  --bg:#ffffff; --ink:#1f2937; --muted:#6b7280; --border:#e5e7eb; --accent:#3b82f6; --accent-2:#10b981; --card:#ffffff; --shadow:0 10px 24px rgba(0,0,0,.06);
+  --bg:#ffffff; --ink:#1f2937; --muted:#6b7280; --border:#e5e7eb; 
+  --accent:#3b82f6; --accent-2:#10b981; --card:#ffffff; 
+  --shadow:0 10px 24px rgba(0,0,0,.06);
+  /* 雷演出用カラー */
+  --storm-bg: #111827;
+  --lightning: #e0f2fe;
+  --electric: #0ea5e9;
 }
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--bg); color:var(--ink);
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  transition: background 1.5s ease;
 }
-.container{ max-width:1000px; margin:0 auto; padding:24px 16px 48px }
+
+/* ストームモード */
+body.storm-mode { background: var(--storm-bg); color: #e5e7eb; }
+body.storm-mode .panel, body.storm-mode .role { background: #1f2937; border-color: #374151; color: #f3f4f6; }
+body.storm-mode h1, body.storm-mode .logo { filter: brightness(0.8); }
+
+/* 画面振動 */
+body.shaking { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+
+.container{ max-width:1000px; margin:0 auto; padding:24px 16px 48px; position:relative; z-index:10; }
+
+#fxCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+
 header{ display:flex; align-items:flex-start; gap:12px; margin-bottom:16px }
-.logo{
-  width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#60a5fa);
-  display:grid; place-items:center; color:#fff; font-weight:900; box-shadow:var(--shadow);
-}
+.logo{ width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#60a5fa); display:grid; place-items:center; color:#fff; font-weight:900; box-shadow:var(--shadow); }
 h1{ font-size:22px; margin:0 }
-.note{ color:var(--muted); margin:4px 0 0; font-size:13px }
 
 .panel{
   background:var(--card); border:1px solid var(--border);
   border-radius:16px; padding:16px; box-shadow:var(--shadow); margin-bottom:16px;
+  transition: background 0.3s, border-color 0.3s;
 }
 
+/* フォーム */
 .grid{ display:grid; grid-template-columns: repeat(3, minmax(180px,1fr)); gap:12px }
 .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px 6px }
 .field input{
   width:100%; padding:12px 14px; background:#fff; color:var(--ink);
   border:1px solid var(--border); border-radius:12px; outline:none;
-  transition:border .15s, box-shadow .15s, transform .06s;
 }
-.field input:focus{
-  border-color:var(--accent);
-  box-shadow:0 0 0 4px rgba(59,130,246,.16);
-  transform: translateY(-1px);
-}
+.field input:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(59,130,246,.16); }
 
+/* ボタン */
 .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
 button{
   appearance:none; border:none; cursor:pointer;
   padding:12px 16px; border-radius:12px; font-size:15px; font-weight:600;
-  transition: transform .06s ease, filter .15s ease, background .2s, box-shadow .2s, opacity .2s;
+  transition: transform .06s ease;
 }
-.primary{
-  color:#fff; background:linear-gradient(135deg,var(--accent),#60a5fa);
-  box-shadow:0 12px 28px rgba(59,130,246,.24), inset 0 -2px 0 rgba(0,0,0,.06);
-}
-.secondary{
-  color:var(--ink); background:#fff; border:1px solid var(--border);
-}
-.ghost{
-  color:var(--muted); background:#fff; border:1px dashed var(--border);
-}
+button:active{ transform:scale(0.96); }
+.primary{ color:#fff; background:linear-gradient(135deg,var(--accent),#60a5fa); box-shadow:0 12px 28px rgba(59,130,246,.24); }
+.secondary{ color:var(--ink); background:#fff; border:1px solid var(--border); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.error{
-  color:#b00020; background:#fff5f6; border:1px solid #ffd8dd;
-  padding:10px 12px; border-radius:12px; font-size:13px; margin-top:12px; display:none;
-}
-
-.results{
-  display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap:14px;
-}
+/* 結果カード */
+.results{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; perspective: 1000px; }
 .round{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:14px;
-  box-shadow:var(--shadow);
-  min-height:164px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:14px; box-shadow:var(--shadow);
+  min-height:164px; transition: all 0.3s; position: relative; overflow: hidden;
 }
-.round h3{
-  margin:0 0 10px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--muted);
-}
-.badge{
-  color:#064e3b; background:linear-gradient(135deg,var(--accent-2),#34d399);
-  padding:2px 10px; border-radius:999px; font-weight:800; font-size:12px;
-}
+.round.electrified { border-color: var(--electric); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); animation: pulseGlow 2s infinite alternate; }
+@keyframes pulseGlow { from{box-shadow:0 0 10px rgba(59,130,246,0.2);} to{box-shadow:0 0 25px rgba(59,130,246,0.6);} }
+
+.round h3{ margin:0 0 10px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--muted); }
+.badge{ color:#064e3b; background:linear-gradient(135deg,var(--accent-2),#34d399); padding:2px 10px; border-radius:999px; font-weight:800; font-size:12px; }
+
 .assign{ display:grid; gap:10px }
 .role{
-  display:flex; align-items:center; gap:12px;
-  padding:12px; border-radius:12px; background:#ffffff; border:1px solid var(--border);
-  position:relative; overflow:hidden;
+  display:flex; align-items:center; gap:12px; padding:12px; border-radius:12px;
+  background:#ffffff; border:1px solid var(--border); position:relative; overflow:hidden;
 }
-.tag{
-  min-width:94px; text-align:center; color:#fff;
-  background:linear-gradient(135deg,var(--accent),#60a5fa);
-  border-radius:999px; font-size:12px; font-weight:800; padding:4px 10px;
-}
-.name{ font-size:16px; font-weight:700; letter-spacing:.02em }
+.role.struck { animation: strikeFlash 0.4s ease-out forwards; }
+@keyframes strikeFlash { 0% { background: #fff; filter: brightness(3); } 50% { background: #e0f2fe; } 100% { background: var(--card); } }
+
+.tag{ min-width:94px; text-align:center; color:#fff; background:linear-gradient(135deg,var(--accent),#60a5fa); border-radius:999px; font-size:12px; font-weight:800; padding:4px 10px; }
+.name{ font-size:16px; font-weight:700; }
 .placeholder{ color:var(--muted); font-weight:500; letter-spacing:.08em }
-.reveal{ animation: pop .22s ease-out forwards; transform:scale(.98); opacity:0 }
-@keyframes pop{ to{ transform:scale(1); opacity:1 } }
 
-/* タイマー（ページ最下部） */
-.timer-wrap{ display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
-.timer-face{
-  min-width:220px; padding:12px 16px; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:var(--shadow);
+.lucky-box{
+  margin-top:20px; padding:16px; border-radius:16px; background: #f9fafb; border: 1px solid var(--border);
+  text-align:center; display:none; animation: popIn 0.4s ease-out;
 }
-.time{
-  font-variant-numeric: tabular-nums; font-size:40px; font-weight:800; letter-spacing:.03em; text-align:center; color:var(--ink);
-}
-.time.ended{ color:#ef4444 }
-.timer-face.ended{ border-color:#ef4444; box-shadow:0 0 0 4px rgba(239,68,68,.15); animation:pulse 900ms ease-out 2 }
-@keyframes pulse{ 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+.lucky-box.show{ display:block; }
+@keyframes popIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
+
+/* タイマー機能 */
+.timer-wrap{ display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:10px; }
+.timer-face{ min-width:240px; padding:16px; border:1px solid var(--border); border-radius:16px; background:#fff; box-shadow:var(--shadow); }
+.time{ font-variant-numeric: tabular-nums; font-size:48px; font-weight:800; text-align:center; color:var(--ink); }
+.time.ended{ color:#ef4444; }
 .timer-sub{ text-align:center; color:var(--muted); font-size:12px; margin-top:4px }
+.timer-end-msg{ text-align:center; color:#059669; font-size:14px; font-weight:700; margin-top:8px; opacity:0; }
+.timer-end-msg.show{ opacity:1; }
 
-/* 終了メッセージ */
-.timer-end-msg{
-  text-align:center; color:#065f46; font-size:12px; margin-top:6px;
-  opacity:0; transition: opacity .25s ease;
-  display:none;
-}
-.timer-end-msg.show{ display:block; opacity:1; }
+.fx-row{ display:flex; align-items:center; gap:8px; margin-top:8px; color:var(--muted); font-size:13px; }
+.preset-row, .custom-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+.custom-row{ margin-top:12px; font-size:13px; color:var(--muted); }
+.note{ font-weight:700; margin-right:4px; }
+.num{ width:80px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:14px }
 
-/* 入力横の演出トグル */
-.fx-row{
-  display:flex; align-items:center; gap:8px; margin-top:8px; color:var(--muted); font-size:13px;
-}
-.fx-row input{ width:16px; height:16px }
-.fx-row label{ user-select:none; cursor:pointer }
+/* フッター */
+.footer{ color:var(--muted); font-size:12px; margin-top:32px; border-top:1px solid var(--border); padding-top:12px; display:flex; flex-wrap: wrap; gap:10px; justify-content:space-between; align-items:center; }
+.license{ padding:6px 10px; border-radius:10px; border:1px dashed var(--border); background:#fafafa; line-height: 1.4; }
 
-/* 合意オーバーレイ（固定文・OKで開始） */
-.overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.5);
-  display:flex; align-items:center; justify-content:center; padding:16px; z-index:50;
-}
-.dialog{
-  max-width:780px; width:100%;
-  background:#fff; color:#fff; border-radius:16px; border:1px solid var(--border);
-  box-shadow:0 20px 40px rgba(0,0,0,.25);
-  padding:16px; color:#1f2937;
-}
-.dialog h2{ margin:0 0 8px; font-size:18px }
-.dialog p{ margin:6px 0; color:#374151; line-height:1.6 }
-.bullet{ margin:8px 0 0 0; padding-left:18px; color:#374151 }
-.bullet li{ margin:6px 0 }
-.dialog .buttons{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap }
+/* 合意オーバーレイ */
+.overlay{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; padding:16px; z-index:2000; }
+.dialog{ max-width:600px; width:100%; background:#fff; border-radius:16px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+.dialog h2{ margin:0 0 12px; font-size:20px; }
+.bullet li{ margin:8px 0; line-height:1.6; color:#374151; }
 
-/* プリセット/カスタム行 */
-.preset-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-.custom-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px }
-.num{ width:84px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px }
-.grow{ flex:1 1 auto }
-
-/* 紙吹雪（小さめ） */
-.confetti-piece{
-  position:fixed; top:-12px; width:8px; height:12px; border-radius:2px; opacity:.9; z-index:60;
-  animation: confettiFall 1100ms ease-out forwards;
-  pointer-events:none;
-}
-@keyframes confettiFall{
-  0%{ transform:translateY(-12px) rotate(0deg) }
-  100%{ transform:translateY(100vh) rotate(540deg) }
-}
-
-/* メディアクエリ */
 @media (max-width:720px){ .grid{ grid-template-columns: 1fr } }
-@media (prefers-reduced-motion: reduce){
-  .reveal, .timer-face.ended{ animation:none }
-  .confetti-piece{ display:none !important; animation:none !important }
-}
-.footer{
-  color:var(--muted); font-size:12px; margin-top:18px;
-  display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-  border-top:1px solid var(--border); padding-top:12px;
-}
-.license{
-  padding:6px 10px; border-radius:10px; border:1px dashed var(--border); background:#fafafa;
-}
 </style>
 </head>
 <body>
 
-<!-- 合意（守秘・学びと実験・共に創る）-->
-<div id="consentOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+<canvas id="fxCanvas"></canvas>
+
+<div id="consentOverlay" class="overlay" role="dialog" aria-modal="true">
   <div class="dialog">
     <h2 id="consentTitle">合意の確認</h2>
     <p>本アプリは、コーチングのスキルドリルを「効率的に・遊び心をもって」行うための場づくりを支援します。安心・安全な学びのため、以下に同意のうえ開始してください。</p>
@@ -187,102 +144,80 @@ button{
       <li><strong>学びと実験の場</strong>: 完璧さではなく学び・挑戦を尊重します。うまくいかないことも実験の一部です。</li>
       <li><strong>共に創る</strong>: 相互承認・時間厳守・フィードフォワードで、場を一緒に良くしていきます。</li>
     </ul>
-    <div class="buttons">
-      <button id="consentOk" class="primary">OK（同意して始める）</button>
+    <div class="buttons" style="margin-top:20px; justify-content:center;">
+      <button id="consentOk" class="primary" style="padding:12px 24px;">OK（同意して始める）</button>
     </div>
-    <p class="note" style="margin-top:6px">この合意はブラウザを閉じるまで有効です。</p>
   </div>
 </div>
 
 <div class="container" aria-hidden="true" id="appRoot">
   <header>
-    <div class="logo" aria-hidden="true">Co</div>
+    <div class="logo" aria-hidden="true">⚡️</div>
     <div>
-      <h1>Coaching スキルドリルアプリ</h1>
+      <h1>Coaching スキルドリル</h1>
     </div>
   </header>
 
-  <!-- 参加者・抽選 -->
-  <section class="panel" aria-labelledby="assignTitle">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-      <div id="assignTitle" style="font-weight:700">参加者と抽選</div>
-    </div>
+  <section class="panel">
+    <div style="font-weight:700;margin-bottom:8px">参加者と抽選</div>
     <div class="grid">
-      <div class="field">
-        <label for="p1">参加者1</label>
-        <input id="p1" type="text" placeholder="参加者1" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="field">
-        <label for="p2">参加者2</label>
-        <input id="p2" type="text" placeholder="参加者2" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="field">
-        <label for="p3">参加者3</label>
-        <input id="p3" type="text" placeholder="参加者3" autocomplete="off" spellcheck="false">
-      </div>
+      <div class="field"><label>参加者1</label><input id="p1" type="text" placeholder="参加者1"></div>
+      <div class="field"><label>参加者2</label><input id="p2" type="text" placeholder="参加者2"></div>
+      <div class="field"><label>参加者3</label><input id="p3" type="text" placeholder="参加者3"></div>
     </div>
-
     <div class="buttons">
       <button id="drawBtn" class="primary">抽選する</button>
       <button id="redrawBtn" class="secondary" disabled>もう一度 抽選</button>
       <button id="copyBtn" class="secondary" disabled>結果をコピー</button>
     </div>
-
-    <!-- 軽い演出のオン/オフ -->
     <div class="fx-row">
-      <input type="checkbox" id="fxToggle">
-      <label for="fxToggle">軽い演出を有効にする
-</label>
+      <input type="checkbox" id="fxToggle" checked> <label for="fxToggle">効果音・演出（Storm Mode）</label>
     </div>
-
-    <div id="error" class="error" role="alert"></div>
   </section>
 
-  <!-- 結果 -->
   <section id="results" class="results" aria-live="polite"></section>
 
-  <!-- タイマー（ページ最下部・プリセット＋カスタム） -->
-  <section class="panel" aria-labelledby="timerTitle">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-      <div id="timerTitle" style="font-weight:700">タイマー</div>
+  <div id="luckyBox" class="lucky-box">
+    <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px">Topic</div>
+    <div id="luckyText" class="lucky-text"></div>
+  </div>
+
+  <section class="panel" style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-weight:700;">タイマー</div>
       <div class="preset-row">
         <span class="note">プリセット:</span>
-        <button class="chip" data-min="15">15分</button>
-        <button class="chip" data-min="25">25分</button>
-        <button class="chip" data-min="30">30分</button>
+        <button class="chip secondary" data-min="10">10分</button>
+        <button class="chip secondary" data-min="15">15分</button>
+        <button class="chip secondary" data-min="25">25分</button>
       </div>
     </div>
 
     <div class="custom-row">
-      <span class="note">カスタム設定:</span>
-      <input id="mInput" class="num" type="number" min="0" max="600" step="1" value="25" aria-label="分"> 分
-      <input id="sInput" class="num" type="number" min="0" max="59" step="1" value="0" aria-label="秒"> 秒
-      <button id="applyCustom" class="secondary">時間を適用</button>
-      <div class="grow"></div>
+      <span class="note">カスタム:</span>
+      <input id="mInput" class="num" type="number" min="0" value="15"> 分
+      <input id="sInput" class="num" type="number" min="0" value="0"> 秒
+      <button id="applyCustom" class="secondary">適用</button>
     </div>
 
-    <!-- 呼鈴（プリアラーム）設定 -->
-    <div class="custom-row" aria-label="呼鈴設定">
-      <span class="note">呼鈴設定:</span>
-      <label for="chimeToggle" class="fx-row" style="margin:0;gap:6px;align-items:center">
-        <input type="checkbox" id="chimeToggle" checked>
-        <span>有効にする</span>
+    <div class="custom-row">
+      <span class="note">呼鈴（n分前）:</span>
+      <label for="chimeToggle" style="display:flex;align-items:center;gap:4px;margin-right:8px">
+        <input type="checkbox" id="chimeToggle" checked> 有効
       </label>
-      <span class="note">鳴らすタイミング:</span>
-      <input id="chimeM" class="num" type="number" min="0" max="600" step="1" value="3" aria-label="分前"> 分前
-      <input id="chimeS" class="num" type="number" min="0" max="59" step="1" value="0" aria-label="秒"> 秒
-      <button id="applyChime" class="secondary">呼鈴設定を適用</button>
+      <input id="chimeM" class="num" type="number" min="0" value="3"> 分前
+      <button id="applyChime" class="secondary">設定</button>
     </div>
-
-    <div class="timer-wrap" style="margin-top:10px">
-      <div id="timerFace" class="timer-face">
-        <div id="time" class="time" aria-live="polite">25:00</div> 
-        <div id="timeNote" class="timer-sub">選択時間: 25分 0秒</div> 
-        <div id="chimeNote" class="timer-sub" aria-live="polite"></div> 
-        <div id="endMsg" class="timer-end-msg" aria-live="polite">お疲れさま！</div>
+    
+    <div class="timer-wrap">
+      <div class="timer-face">
+        <div id="time" class="time">15:00</div> 
+        <div id="timeNote" class="timer-sub">セット: 15分 0秒</div>
+        <div id="chimeNote" class="timer-sub">呼鈴: 3分前</div>
+        <div id="endMsg" class="timer-end-msg"></div>
       </div>
-      <div class="buttons">
-        <button id="startPause" class="primary">開始</button>
+      <div class="buttons" style="flex:1">
+        <button id="startPause" class="primary" style="padding:12px 32px">開始</button>
         <button id="resetTimer" class="secondary">リセット</button>
         <button id="popupBtn" class="secondary">ポップアップ表示</button>
       </div>
@@ -291,7 +226,7 @@ button{
 
   <div class="footer">
     <div>Created by Naomitchy</div>
-    <div class="license">このアプリは CC0（著作権放棄・No Rights Reserved）相当で提供します。出典不要・改変・再配布も自由にご利用ください。</div>
+    <div class="license">このアプリは CC0 （著作権放棄・No Rights Reserved）相当で提供します。出典不要・改変・再配布も自由にご利用ください。</div>
   </div>
 </div>
 
@@ -299,797 +234,473 @@ button{
 (function(){
 'use strict';
 
-/* 合意（固定文面） */
-var consentOverlay = document.getElementById('consentOverlay');
-var consentOk = document.getElementById('consentOk');
-var appRoot = document.getElementById('appRoot');
-function showConsent(){ consentOverlay.style.display='flex'; appRoot.setAttribute('aria-hidden','true'); }
-function hideConsent(){ consentOverlay.style.display='none'; appRoot.removeAttribute('aria-hidden'); }
-if (sessionStorage.getItem('consented') === '1'){ hideConsent(); } else { showConsent(); }
-consentOk.addEventListener('click', function(){ sessionStorage.setItem('consented','1'); hideConsent(); });
+// 外部連携用のステート（ポップアップから参照される）
+window.timerGlobal = {
+  endTime: 0,
+  totalMs: 15 * 60 * 1000,
+  isRunning: false,
+  isEnded: false,
+  displayTime: "15:00",
+  displayNote: "セット: 15分 0秒"
+};
 
-/* 役割（2名/3名） */
-var ROLES3 = ["コーチ","クライアント","オブザーバー"];
-var ROLES2 = ["コーチ","クライアント"];
+/* --- Sound Engine --- */
+const SoundFX = {
+  ctx: null,
+  enabled: true,
+  rumbleOsc: null,
+  rumbleGain: null,
+  
+  init: function() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  },
 
-/* 要素参照 */
-var resultsEl = document.getElementById('results');
-var drawBtn = document.getElementById('drawBtn');
-var redrawBtn = document.getElementById('redrawBtn');
-var copyBtn = document.getElementById('copyBtn');
-var errEl = document.getElementById('error');
-var p1 = document.getElementById('p1');
-var p2 = document.getElementById('p2');
-var p3 = document.getElementById('p3');
+  createNoiseBuffer: function() {
+    if (!this.ctx) return null;
+    const size = this.ctx.sampleRate * 2;
+    const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i=0; i<size; i++) data[i] = Math.random() * 2 - 1;
+    return buf;
+  },
 
-/* 演出トグル */
-var fxToggle = document.getElementById('fxToggle');
-var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var effectsEnabled = false; // 初期は未チェック（オフ）
-try{
-var savedFx = localStorage.getItem('effectsEnabled');
-if (savedFx === null){
-effectsEnabled = false; // 既定は常にオフ（未チェック）
-} else {
-effectsEnabled = savedFx === '1';
+  playTone: function(freq, type, duration, vol, time) {
+    if (!this.enabled || !this.ctx) return;
+    const t = time || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.connect(gain).connect(this.ctx.destination);
+    osc.start(t);
+    osc.stop(t + duration);
+  },
+
+  chime: function() {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.playTone(660, 'sine', 0.8, 0.15, now);
+    this.playTone(550, 'sine', 1.2, 0.15, now + 0.6);
+  },
+
+  startRumble: function() {
+    if (!this.enabled || !this.ctx) return;
+    this.stopRumble();
+    const noise = this.createNoiseBuffer();
+    const src = this.ctx.createBufferSource();
+    src.buffer = noise;
+    src.loop = true;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 120;
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0;
+    src.connect(filter).connect(gain).connect(this.ctx.destination);
+    src.start();
+    gain.gain.linearRampToValueAtTime(0.5, this.ctx.currentTime + 2);
+    this.rumbleOsc = src;
+    this.rumbleGain = gain;
+  },
+
+  stopRumble: function() {
+    if (this.rumbleOsc) {
+      try {
+        this.rumbleGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+        this.rumbleOsc.stop(this.ctx.currentTime + 0.5);
+      } catch(e){}
+      this.rumbleOsc = null;
+    }
+  },
+
+  thunder: function() {
+    if (!this.enabled || !this.ctx) return;
+    this.stopRumble();
+    const t = this.ctx.currentTime;
+    const noise = this.createNoiseBuffer();
+    const src1 = this.ctx.createBufferSource(); src1.buffer = noise;
+    const filter1 = this.ctx.createBiquadFilter(); filter1.type = 'highpass'; filter1.frequency.value = 500;
+    const gain1 = this.ctx.createGain(); gain1.gain.setValueAtTime(0.8, t); gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+    src1.connect(filter1).connect(gain1).connect(this.ctx.destination); src1.start(t);
+    const src2 = this.ctx.createBufferSource(); src2.buffer = noise;
+    const filter2 = this.ctx.createBiquadFilter(); filter2.type = 'lowpass'; filter2.frequency.setValueAtTime(800, t); filter2.frequency.linearRampToValueAtTime(50, t + 1.5);
+    const gain2 = this.ctx.createGain(); gain2.gain.setValueAtTime(1.0, t); gain2.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
+    src2.connect(filter2).connect(gain2).connect(this.ctx.destination); src2.start(t);
+  },
+
+  click: function() {
+    if (!this.enabled || !this.ctx) return;
+    this.playTone(1000, 'sine', 0.1, 0.05);
+  }
+};
+
+/* --- Visual FX --- */
+const VisualFX = {
+  canvas: document.getElementById('fxCanvas'),
+  ctx: null,
+  flashes: [],
+  init: function() {
+    if(this.canvas){
+      this.ctx = this.canvas.getContext('2d');
+      this.resize();
+      window.addEventListener('resize', () => this.resize());
+      this.loop();
+    }
+  },
+  resize: function() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+  createBoltPath: function(x, y, len) {
+    const path = [{x, y}];
+    let currX = x, currY = y;
+    while(currY < this.canvas.height + 100) {
+      currX += (Math.random() - 0.5) * len * 2;
+      currY += (Math.random() * len) + 10;
+      path.push({x: currX, y: currY});
+      if(Math.random() < 0.1) break;
+    }
+    return path;
+  },
+  strike: function() {
+    this.flashes.push({ type: 'screen', alpha: 0.9, decay: 0.08 });
+    const startX = Math.random() * this.canvas.width;
+    this.flashes.push({ type: 'bolt', path: this.createBoltPath(startX, -50, 30), alpha: 1, decay: 0.04, width: 3 });
+  },
+  loop: function() {
+    requestAnimationFrame(() => this.loop());
+    if(!this.ctx) return;
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    for(let i=this.flashes.length-1; i>=0; i--){
+      const f = this.flashes[i];
+      f.alpha -= f.decay;
+      if(f.alpha <= 0){ this.flashes.splice(i, 1); } else {
+        if(f.type === 'screen') {
+          this.ctx.fillStyle = `rgba(255,255,255,${f.alpha})`;
+          this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+        } else if(f.type === 'bolt') {
+          this.ctx.beginPath();
+          this.ctx.strokeStyle = `rgba(255, 255, 255, ${f.alpha})`;
+          this.ctx.shadowBlur = 15; this.ctx.shadowColor = '#0ea5e9'; this.ctx.lineWidth = f.width;
+          if(f.path.length > 0) {
+            this.ctx.moveTo(f.path[0].x, f.path[0].y);
+            for(let p of f.path) this.ctx.lineTo(p.x, p.y);
+          }
+          this.ctx.stroke(); this.ctx.shadowBlur = 0;
+        }
+      }
+    }
+  }
+};
+VisualFX.init();
+
+/* --- App Logic --- */
+const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3');
+const resultsEl = document.getElementById('results'), luckyBox = document.getElementById('luckyBox'), luckyText = document.getElementById('luckyText');
+
+// 20 Questions List
+const QUESTIONS = [
+  "✨ もし何の制約もなかったら、本当は何をしたいですか？",
+  "🚀 1年後、あなたは何を達成して祝杯をあげていますか？",
+  "📖 もし今のあなたの人生が「本」だとしたら、今の章にどんなタイトルをつけますか？",
+  "👴 80歳になったあなたが、今のあなたにアドバイスするとしたら？",
+  "🌅 理想的な「最高の一日」のスケジュールはどんなものですか？",
+  "⚡️ 今、雷に打たれたような衝撃的なアイデアを出すとしたら？",
+  "⚡️ あなたの中で、今にも爆発しそうな「情熱」や「エネルギー」はどこにありますか？",
+  "⛈️ 雨降って地固まる。最近の困難から学んだ「ギフト」は何ですか？",
+  "💡 最近、「あっ！」と気づいたこと（アハ体験）はありますか？",
+  "✨ あなたが絶対に譲れない「大切な価値観」は何ですか？",
+  "💪 あなたがまだ使いきれていない「スーパーパワー（強み）」は何ですか？",
+  "😄 最近、時間を忘れるほど没頭したことや、心から笑ったことは？",
+  "🧸 子供の頃の夢や、大好きだった遊びは何でしたか？",
+  "🛑 前に進むために、今「やめるべきこと」や「手放すべきこと」はありますか？",
+  "🦶 その目標のために、今日踏み出せる「最初の一歩」は？",
+  "🦁 もし「失敗しない」と保証されていたら、何に挑戦しますか？",
+  "🚪 今、勇気を出して開けるべき「ドア」はどれですか？",
+  "🎁 今、あなたが誰かに「ありがとう」を伝えるとしたら誰ですか？",
+  "🕵️‍♂️ 尊敬するあの人なら、今のあなたの状況をどう乗り越えますか？",
+  "🎯 この時間の最後、どんな気持ちになっていたいですか？"
+];
+
+function draw(){
+  const names = [p1.value, p2.value, p3.value].map(n=>n.trim()).filter(n=>n);
+  if (names.length < 2) { alert("2名以上入力してください"); return; }
+  
+  luckyBox.classList.remove('show');
+  resultsEl.innerHTML = "";
+  document.body.classList.add('storm-mode');
+  SoundFX.startRumble();
+  
+  const roles = names.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
+  const cards = [];
+
+  for(let i=0; i<names.length; i++){
+    const card = document.createElement('div'); card.className = 'round';
+    card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
+    const list = card.querySelector('.assign');
+    roles.forEach(role => {
+      const row = document.createElement('div'); row.className = 'role';
+      row.innerHTML = `<div class="tag">${role}</div><div class="name placeholder">???</div>`;
+      list.appendChild(row);
+    });
+    resultsEl.appendChild(card);
+    cards.push(card);
+  }
+
+  setTimeout(() => {
+    SoundFX.thunder();
+    VisualFX.strike();
+    document.body.classList.add('shaking');
+    setTimeout(()=> document.body.classList.remove('shaking'), 500);
+    document.body.classList.remove('storm-mode');
+
+    const shuffled = [...names];
+    for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+
+    cards.forEach((card, roundIdx) => {
+      card.classList.add('electrified');
+      const rows = card.querySelectorAll('.role');
+      rows.forEach((row, roleIdx) => {
+        row.querySelector('.name').textContent = shuffled[(roundIdx + roleIdx) % names.length];
+        row.querySelector('.name').classList.remove('placeholder');
+        row.classList.add('struck');
+      });
+    });
+
+    luckyText.textContent = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+    luckyBox.classList.add('show');
+    document.getElementById('redrawBtn').disabled = false;
+    document.getElementById('copyBtn').disabled = false;
+    
+    let txt = "";
+    cards.forEach((c, i) => {
+      txt += `[第${i+1}回]\n`;
+      c.querySelectorAll('.role').forEach(r => txt += `- ${r.querySelector('.tag').textContent}: ${r.querySelector('.name').textContent}\n`);
+      txt += "\n";
+    });
+    document.getElementById('copyBtn').dataset.text = txt + `\n⚡️ 問い: ${luckyText.textContent}`;
+  }, 2500);
 }
-}catch(_){
-effectsEnabled = false; // 例外時もオフ
-}
-if (fxToggle){
-fxToggle.checked = !!effectsEnabled;
-}
-function isMotionOk(){ return effectsEnabled && !prefersReducedMotion; }
-if (fxToggle){
-  fxToggle.addEventListener('change', function(){
-    effectsEnabled = !!fxToggle.checked;
-    try{ localStorage.setItem('effectsEnabled', effectsEnabled ? '1' : '0'); }catch(_){}
+
+document.getElementById('drawBtn').addEventListener('click', draw);
+document.getElementById('redrawBtn').addEventListener('click', draw);
+document.getElementById('copyBtn').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('copyBtn').dataset.text).then(()=>alert("コピーしました")));
+
+/* --- タイマー機能 --- */
+let timerInterval = null;
+let chimeEnabled = true;
+let chimeBeforeMs = 3 * 60 * 1000;
+let chimeFired = false;
+
+const timeEl = document.getElementById('time');
+const startBtn = document.getElementById('startPause');
+const resetBtn = document.getElementById('resetTimer');
+const endMsgEl = document.getElementById('endMsg');
+const chimeToggle = document.getElementById('chimeToggle');
+
+chimeToggle.addEventListener('change', (e) => { chimeEnabled = e.target.checked; SoundFX.click(); });
+document.getElementById('applyChime').addEventListener('click', () => {
+  const m = parseInt(document.getElementById('chimeM').value);
+  chimeBeforeMs = m * 60 * 1000;
+  document.getElementById('chimeNote').textContent = `呼鈴: ${m}分前`;
+  SoundFX.click();
+});
+
+document.getElementById('applyCustom').addEventListener('click', () => {
+  const m = parseInt(document.getElementById('mInput').value);
+  const s = parseInt(document.getElementById('sInput').value);
+  window.timerGlobal.totalMs = (m * 60 + s) * 1000;
+  resetTimerState();
+});
+
+document.querySelectorAll('.chip').forEach(b => {
+  b.addEventListener('click', () => {
+    const m = parseInt(b.dataset.min);
+    document.getElementById('mInput').value = m;
+    document.getElementById('sInput').value = 0;
+    document.getElementById('applyCustom').click();
   });
+});
+
+function updateTimeDisplay(ms) {
+  const totalSec = Math.ceil(Math.max(0, ms) / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  const timeStr = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  timeEl.textContent = timeStr;
+  window.timerGlobal.displayTime = timeStr; // グローバル連携更新
 }
 
-/* 入力欄を空に（自動復元対策） */
-if (p1) p1.value = "";
-if (p2) p2.value = "";
-if (p3) p3.value = "";
-
-/* タイマーDOM */
-var timerFace = document.getElementById('timerFace');
-var timeEl = document.getElementById('time');
-var timeNoteEl = document.getElementById('timeNote'); // これを追加
-var chimeNoteEl = document.getElementById('chimeNote');
-var endMsgEl = document.getElementById('endMsg');
-var startPauseBtn = document.getElementById('startPause');
-var resetBtn = document.getElementById('resetTimer');
-var popupBtn = document.getElementById('popupBtn');
-var chipBtns = Array.prototype.slice.call(document.querySelectorAll('.chip'));
-var mInput = document.getElementById('mInput');
-var sInput = document.getElementById('sInput');
-var applyCustomBtn = document.getElementById('applyCustom');
-
-/* 呼鈴（プリアラーム）DOM */
-var chimeToggle = document.getElementById('chimeToggle');
-var chimeMInput = document.getElementById('chimeM');
-var chimeSInput = document.getElementById('chimeS');
-var applyChimeBtn = document.getElementById('applyChime');
-
-/* タイマー状態（デフォルト25:00） */
-var selMin = 25, selSec = 0;
-var didEndNotify = false; // 終了通知（ビープ等）を一度だけ行ったか
-var running = false;
-var remainingMs = (selMin*60 + selSec) * 1000;
-var endAt = 0;
-var rafId = 0;
-
-/* 呼鈴（プリアラーム）状態と保存キー */
-var CHIME_ENABLED_KEY = 'chimeEnabled';
-var CHIME_MIN_KEY = 'chimeBeforeMin';
-var CHIME_SEC_KEY = 'chimeBeforeSec';
-var chimeEnabled = true; // 既定ON
-var chimeBeforeMs = 3*60*1000; // 3分（既定）
-var chimeFired = false;
-var chimeTimerId = 0;
-var endTimerId = 0;
-
-/* タイマー設定の保存/復元 */
-var TIMER_MIN_KEY = 'timerSelMin';
-var TIMER_SEC_KEY = 'timerSelSec';
-
-/* ポップアップから参照するための状態ゲッター */
-window.getTimerState = function(){
-return {
-running: running,
-endAt: endAt,
-remainingMs: remainingMs,
-selMin: selMin,
-selSec: selSec,
-didEndNotify: didEndNotify,
-totalMs: (selMin*60 + selSec) * 1000
-};
-};
-
-/* 保存・復元（タイマー選択） */
-function saveTimerSelection(){
-try{
-localStorage.setItem(TIMER_MIN_KEY, String(selMin));
-localStorage.setItem(TIMER_SEC_KEY, String(selSec));
-}catch(_){}
-}
-function restoreTimerSelection(){
-try{
-var m = parseInt(localStorage.getItem(TIMER_MIN_KEY), 10);
-var s = parseInt(localStorage.getItem(TIMER_SEC_KEY), 10);
-if (isNaN(m)) return false;
-if (isNaN(s)) s = 0;
-setPreset(m, s);
-return true;
-}catch(_){
-return false;
-}
-}
-
-/* 保存・復元（呼鈴設定） */
-function saveChimeSettings(){
-  try{
-    localStorage.setItem(CHIME_ENABLED_KEY, chimeEnabled ? '1' : '0');
-    var beforeSec = Math.max(0, Math.floor(chimeBeforeMs/1000));
-    var m = Math.floor(beforeSec/60);
-    var s = beforeSec%60;
-    localStorage.setItem(CHIME_MIN_KEY, String(m));
-    localStorage.setItem(CHIME_SEC_KEY, String(s));
-  }catch(_){}
-}
-function restoreChimeSettings(){
-  try{
-    var en = localStorage.getItem(CHIME_ENABLED_KEY);
-    chimeEnabled = (en === null) ? true : (en === '1');
-    var m = parseInt(localStorage.getItem(CHIME_MIN_KEY), 10);
-    var s = parseInt(localStorage.getItem(CHIME_SEC_KEY), 10);
-    if (isNaN(m)) m = 3;
-    if (isNaN(s)) s = 0;
-    m = Math.max(0, Math.min(600, m|0));
-    s = Math.max(0, Math.min(59, s|0));
-    chimeBeforeMs = (m*60 + s) * 1000;
-    if (chimeToggle) chimeToggle.checked = !!chimeEnabled;
-    if (chimeMInput) chimeMInput.value = String(m);
-    if (chimeSInput) chimeSInput.value = String(s);
-    updateChimeNote();
-  }catch(_){
-    chimeEnabled = true;
-    chimeBeforeMs = 180000;
+function checkAlarms(remaining) {
+  if (chimeEnabled && !chimeFired && remaining <= chimeBeforeMs && remaining > 0) {
+    chimeFired = true;
+    SoundFX.chime();
+  }
+  if (remaining <= 0) {
+    stopTimer();
+    timeEl.classList.add('ended');
+    endMsgEl.textContent = "⚡️ TIME'S UP!";
+    endMsgEl.classList.add('show');
+    window.timerGlobal.isEnded = true; // グローバル連携
+    SoundFX.thunder();
+    VisualFX.strike();
   }
 }
 
-/* プリセットの適用 */
-function setPreset(min, sec){
-selMin = Math.max(0, Math.floor(min||0));
-selSec = Math.max(0, Math.min(59, Math.floor(sec||0)));
-mInput.value = String(selMin);
-sInput.value = String(selSec);
-chipBtns.forEach(function(b){
-b.classList.toggle('active', Number(b.dataset.min)===selMin && selSec===0);
-});
-if (!running){
-remainingMs = (selMin*60 + selSec) * 1000;
-renderTime(remainingMs);
-}
-updateTimeNote();
-saveTimerSelection();
-// 呼鈴の状態をリセット（しきい値を再計算するため）
-chimeFired = false;
-if (running){ scheduleAlarms(); } else { clearAlarmTimers(); }
+function tick() {
+  if (!window.timerGlobal.isRunning) return;
+  const remaining = window.timerGlobal.endTime - Date.now();
+  updateTimeDisplay(remaining);
+  checkAlarms(remaining);
+  if (remaining > 0) timerInterval = requestAnimationFrame(tick);
 }
 
-function updateTimeNote(){
-timeNoteEl.textContent = "選択時間: " + selMin + "分 " + selSec + "秒";
-updatePopupUI(false);
+function stopTimer() {
+  window.timerGlobal.isRunning = false;
+  cancelAnimationFrame(timerInterval);
+  startBtn.textContent = "開始";
 }
 
-function formatChimeBefore(ms){
-var totalSec = Math.max(0, Math.round(ms/1000));
-var m = Math.floor(totalSec/60);
-var s = totalSec % 60;
-var parts = [];
-if (m > 0) parts.push(m + '分');
-if (s > 0) parts.push(s + '秒');
-var when = parts.length ? parts.join('') + '前' : '0秒前';
-return when;
-}
-function updateChimeNote(){
-if (!chimeNoteEl) return;
-if (!chimeEnabled){
-chimeNoteEl.textContent = '呼鈴: オフ';
-} else {
-chimeNoteEl.textContent = '呼鈴: ' + formatChimeBefore(chimeBeforeMs);
-}
+function resetTimerState() {
+  stopTimer();
+  timeEl.classList.remove('ended');
+  endMsgEl.classList.remove('show');
+  updateTimeDisplay(window.timerGlobal.totalMs);
+  chimeFired = false;
+  window.timerGlobal.isEnded = false;
+  
+  const m = Math.floor(window.timerGlobal.totalMs / 60000);
+  const s = (window.timerGlobal.totalMs % 60000) / 1000;
+  const note = `セット: ${m}分 ${s}秒`;
+  document.getElementById('timeNote').textContent = note;
+  window.timerGlobal.displayNote = note;
+  
+  SoundFX.click();
 }
 
-function renderTime(ms){
-var neg = ms < 0;
-var absMs = Math.abs(ms);
-var totalSec = Math.ceil(absMs / 1000);
-var m = Math.floor(totalSec / 60);
-var s = totalSec % 60;
-var text = (neg ? '-' : '') + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
-timeEl.textContent = text;
-updatePopupUI(true);
-}
-
-function showEndMessage(){
-if (!endMsgEl) return;
-if (effectsEnabled){
-endMsgEl.classList.add('show');
-setTimeout(function(){ endMsgEl.classList.remove('show'); }, 2500);
-}
-}
-
-function tick(){
-var now = Date.now();
-var ms = endAt - now;
-remainingMs = ms;
-if (ms <= 0 && !didEndNotify){
-timerFace.classList.add('ended');
-timeEl.classList.add('ended');
-playBeep();
-if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
-didEndNotify = true;
-showEndMessage();
-}
-renderTime(ms);
-if (running){
-rafId = requestAnimationFrame(tick);
-}
-}
-
-/* オーディオ（終了時ビープ・呼鈴ビープ） */
-var audioCtx = null;
-function ensureAudio(){
-if (!audioCtx){
-try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){}
-}
-if (audioCtx && audioCtx.state === 'suspended'){
-audioCtx.resume().catch(function(){});
-}
-}
-function toneOnce(freq, startAt, dur, peak){
-var t0 = startAt;
-var osc = audioCtx.createOscillator();
-var gain = audioCtx.createGain();
-osc.type = 'sine';
-osc.frequency.setValueAtTime(freq, t0);
-gain.gain.setValueAtTime(0.0001, t0);
-gain.gain.linearRampToValueAtTime(peak, t0 + 0.02);
-gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-osc.connect(gain).connect(audioCtx.destination);
-osc.start(t0);
-osc.stop(t0 + dur + 0.02);
-}
-function playBeep(){
-if (!audioCtx) return;
-try{
-var t0 = audioCtx.currentTime;
-[0, 0.35].forEach(function(offset){
-toneOnce(880, t0+offset, 0.3, 0.18);
-});
-}catch(_){}
-}
-function playChime(){
-if (!audioCtx) return;
-try{
-var t0 = audioCtx.currentTime;
-// 短い二音で注意喚起（デフォルト3分前など）
-toneOnce(660, t0, 0.18, 0.16);
-toneOnce(990, t0+0.22, 0.18, 0.14);
-}catch(_){}
-}
-
-/* 終了通知の強制発火（バックアップ） */
-function ensureEndFired(){
-var ms = endAt - Date.now();
-remainingMs = ms;
-if (ms <= 0 && !didEndNotify){
-timerFace.classList.add('ended');
-timeEl.classList.add('ended');
-playBeep();
-if (navigator.vibrate) try{ navigator.vibrate([120,60,120]); }catch(_){}
-didEndNotify = true;
-showEndMessage();
-}
-}
-// ポップアップから呼べるように公開
-window.ensureEndFired = ensureEndFired;
-
-/* 呼鈴タイマーの管理 */
-function clearAlarmTimers(){
-if (chimeTimerId){ clearTimeout(chimeTimerId); chimeTimerId = 0; }
-if (endTimerId){ clearTimeout(endTimerId); endTimerId = 0; }
-}
-function fireChime(){
-if (chimeFired || !chimeEnabled) return;
-chimeFired = true;
-ensureAudio();
-playChime();
-if (navigator.vibrate) try{ navigator.vibrate([80,40,80]); }catch(_){}
-}
-function scheduleAlarms(){
-clearAlarmTimers();
-if (!running) return;
-var now = Date.now();
-var msToEnd = endAt - now;
-if (msToEnd <= 0) return;
-// 終了通知のバックアップ（rAFが止まっても鳴るように）
-endTimerId = setTimeout(ensureEndFired, Math.max(0, msToEnd) + 10);
-// 呼鈴（プリアラーム）
-if (chimeEnabled){
-var delay = msToEnd - chimeBeforeMs;
-if (delay > 0){
-chimeTimerId = setTimeout(function(){ fireChime(); }, delay);
-} else {
-// すでにしきい値を過ぎていれば、未発火なら即時鳴らす
-if (!chimeFired && msToEnd > 0) fireChime();
-}
-}
-}
-
-/* タイマー操作 */
-function startTimer(){
-if (running) return;
-ensureAudio();
-timerFace.classList.remove('ended');
-timeEl.classList.remove('ended');
-if (endMsgEl) endMsgEl.classList.remove('show');
-running = true;
-endAt = Date.now() + remainingMs;
-startPauseBtn.textContent = '一時停止';
-updatePopupUI(false);
-// 呼鈴は再計算
-scheduleAlarms();
-rafId = requestAnimationFrame(tick);
-}
-function pauseTimer(){
-if (!running) return;
-running = false;
-cancelAnimationFrame(rafId);
-remainingMs = endAt - Date.now();
-startPauseBtn.textContent = '再開';
-clearAlarmTimers();
-updatePopupUI(false);
-}
-function resetTimer(){
-running = false;
-cancelAnimationFrame(rafId);
-didEndNotify = false;
-chimeFired = false;
-remainingMs = (selMin*60 + selSec) * 1000;
-renderTime(remainingMs);
-startPauseBtn.textContent = '開始';
-timerFace.classList.remove('ended');
-timeEl.classList.remove('ended');
-if (endMsgEl) endMsgEl.classList.remove('show');
-clearAlarmTimers();
-}
-
-/* イベント: タイマー操作 */
-startPauseBtn.addEventListener('click', function(){ if (running) pauseTimer(); else startTimer(); });
-resetBtn.addEventListener('click', resetTimer);
-chipBtns.forEach(function(btn){
-btn.addEventListener('click', function(){
-setPreset(Number(btn.dataset.min), 0);
-resetTimer();
-ensureAudio();
-});
-});
-applyCustomBtn.addEventListener('click', function(){
-var m = parseInt(mInput.value,10);
-var s = parseInt(sInput.value,10);
-if (isNaN(m)||m<0) m=0;
-if (isNaN(s)||s<0) s=0;
-if (s>59) s=59;
-setPreset(m, s);
-resetTimer();
-ensureAudio();
+startBtn.addEventListener('click', () => {
+  if (window.timerGlobal.isRunning) {
+    stopTimer();
+    startBtn.textContent = "再開";
+  } else {
+    // 終了状態からの再開ならリセット
+    if (window.timerGlobal.isEnded || timeEl.textContent === "00:00") {
+      const parts = timeEl.textContent.split(':');
+      if(parts[0]=="00" && parts[1]=="00") {
+          window.timerGlobal.endTime = Date.now() + window.timerGlobal.totalMs;
+          chimeFired = false;
+          timeEl.classList.remove('ended');
+          endMsgEl.classList.remove('show');
+          window.timerGlobal.isEnded = false;
+      }
+    } else {
+       const parts = timeEl.textContent.split(':');
+       const currentMs = (parseInt(parts[0])*60 + parseInt(parts[1])) * 1000;
+       window.timerGlobal.endTime = Date.now() + currentMs;
+    }
+    
+    window.timerGlobal.isRunning = true;
+    startBtn.textContent = "一時停止";
+    SoundFX.init();
+    tick();
+  }
 });
 
- /* イベント: 呼鈴設定 */
-if (chimeToggle){
-chimeToggle.addEventListener('change', function(){
-chimeEnabled = !!chimeToggle.checked;
-saveChimeSettings();
-chimeFired = false;
-updateChimeNote();
-if (running) scheduleAlarms(); else clearAlarmTimers();
-});
-}
-if (applyChimeBtn){
-applyChimeBtn.addEventListener('click', function(){
-var cm = parseInt(chimeMInput.value, 10);
-var cs = parseInt(chimeSInput.value, 10);
-if (isNaN(cm) || cm < 0) cm = 0;
-if (isNaN(cs) || cs < 0) cs = 0;
-if (cs > 59) cs = 59;
-chimeBeforeMs = (cm*60 + cs) * 1000;
-// 正規化してUIへ反映
-chimeMInput.value = String(cm);
-chimeSInput.value = String(cs);
-chimeFired = false;
-saveChimeSettings();
-updateChimeNote();
-if (running) scheduleAlarms();
-});
-}
+resetBtn.addEventListener('click', resetTimerState);
 
-/* ここから: ポップアップ機能 */
-var popupWin = null;
-var lastPopupUpdate = 0;
-function isPopupOpen(){ return popupWin && !popupWin.closed; }
-function setPopupBtnText(){
-if (!popupBtn) return;
-popupBtn.textContent = isPopupOpen() ? 'ポップアップを閉じる' : 'ポップアップ表示';
-}
-function openPopup(){
-if (isPopupOpen()){ popupWin.focus(); return; }
-var w = 280, h = 200;
+/* --- ポップアップ機能 (改良版: 左下固定・バックグラウンド動作対応・ボタン復元) --- */
+document.getElementById('popupBtn').addEventListener('click', () => {
+    // 画面左下に配置 (高さ300pxと仮定)
+    const height = 300;
+    const width = 340;
+    const top = window.screen.availHeight - height;
+    
+    const w = window.open('', 'TimerPopup', `width=${width},height=${height},left=0,top=${top}`);
+    
+    // HTML構築
+    w.document.write(`
+      <!doctype html>
+      <html><head><title>Timer</title>
+      <style>
+        body{ 
+          font-family:system-ui,sans-serif; text-align:center; padding:16px; 
+          background:#f9fafb; display:flex; flex-direction:column; 
+          align-items:center; justify-content:center; height:100vh; margin:0; 
+        }
+        .card {
+          background:#fff; padding:20px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+          width:100%; max-width:280px; border:1px solid #e5e7eb;
+        }
+        #pTime { font-size:56px; font-weight:800; margin:0; font-variant-numeric: tabular-nums; color:#1f2937; }
+        #pTime.ended { color:#ef4444; }
+        #pNote { color:#6b7280; font-size:12px; margin-top:4px; margin-bottom:16px; font-weight:500; }
+        .row { display:flex; gap:8px; justify-content:center; }
+        button {
+          flex:1; padding:10px; border-radius:8px; border:1px solid #e5e7eb; 
+          background:#fff; font-weight:700; color:#374151; cursor:pointer;
+          transition:0.1s; font-size:13px;
+        }
+        button:active { transform:scale(0.96); background:#f3f4f6; }
+        button.close { color:#b91c1c; border-color:#fecaca; background:#fef2f2; }
+      </style>
+      </head><body>
+      <div class="card">
+        <div id="pTime">--:--</div>
+        <div id="pNote">選択時間: --</div>
+        <div class="row">
+          <button id="btnStart">開始/停止</button>
+          <button id="btnReset">リセット</button>
+          <button id="btnClose" class="close">閉じる</button>
+        </div>
+      </div>
+      <script>
+        const opener = window.opener;
+        const timeEl = document.getElementById('pTime');
+        const noteEl = document.getElementById('pNote');
+        
+        // ボタン操作を親ウィンドウに委譲
+        document.getElementById('btnStart').onclick = () => opener.document.getElementById('startPause').click();
+        document.getElementById('btnReset').onclick = () => opener.document.getElementById('resetTimer').click();
+        document.getElementById('btnClose').onclick = () => window.close();
 
-var s = window.screen || {};
-var availLeft = (typeof s.availLeft === 'number') ? s.availLeft : 0;
-var availTop = (typeof s.availTop === 'number') ? s.availTop : 0;
-var availWidth = (typeof s.availWidth === 'number') ? s.availWidth : (s.width || 0);
-var availHeight = (typeof s.availHeight === 'number') ? s.availHeight : (s.height || 0);
-
-var left = availLeft;
-var top = availTop + Math.max(0, availHeight - h);
-
-popupWin = window.open(
-'',
-'timer_popup',
-'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',menubar=0,toolbar=0,location=0,status=0,resizable=1'
-);
-if (!popupWin){
-alert('ポップアップがブロックされました。ブラウザのポップアップ許可を有効にしてください。');
-return;
-}
-try { popupWin.moveTo(left, top); } catch (_) {}
-
-popupWin.document.write(
-'<!doctype html><html><head><meta charset="utf-8">'+
-'<title>タイマー</title>'+
-'<style>'+
-'body{margin:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;color:#1f2937;background:#fff}'+
-'.p-face{border:1px solid #e5e7eb;border-radius:12px;padding:10px;box-shadow:0 8px 18px rgba(0,0,0,.06)}'+
-'.p-time{font-variant-numeric:tabular-nums;font-size:42px;font-weight:800;text-align:center}'+
-'.ended .p-time{color:#ef4444}'+
-'.p-sub{font-size:12px;color:#6b7280;text-align:center;margin-top:4px}'+
-'.row{display:flex;gap:8px;margin-top:10px;justify-content:center}'+
-'button{appearance:none;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-weight:600;background:#fff;cursor:pointer}'+
-'</style></head><body>'+
-'<div id="pFace" class="p-face">'+
-'<div id="pTime" class="p-time">--:--</div>'+
-'<div id="pNote" class="p-sub"></div>'+
-'</div>'+
-'<div class="row">'+
-'<button id="pToggle">開始</button>'+
-'<button id="pReset">リセット</button>'+
-'<button id="pClose">閉じる</button>'+
-'</div>'+
-'</body></html>'
-);
-popupWin.document.close();
-
-popupWin.addEventListener('beforeunload', function(){
-setTimeout(function(){ popupWin = null; setPopupBtnText(); }, 0);
+        // 独自のインターバルで時間を再計算（親ウィンドウがフリーズしても動くように）
+        setInterval(()=>{
+           if(opener && !opener.closed){
+              const state = opener.timerGlobal; // 親のグローバル変数を参照
+              
+              if(state.isRunning) {
+                 // 実行中は親のendTimeから現在時刻を引いて独自に計算
+                 const remaining = Math.max(0, state.endTime - Date.now());
+                 const totalSec = Math.ceil(remaining / 1000);
+                 const m = Math.floor(totalSec / 60);
+                 const s = totalSec % 60;
+                 timeEl.textContent = m.toString().padStart(2,'0') + ":" + s.toString().padStart(2,'0');
+                 timeEl.classList.remove('ended');
+              } else {
+                 // 停止中は親の表示をコピー（親がリセットされた場合などを反映）
+                 timeEl.textContent = state.displayTime;
+                 if(state.isEnded) timeEl.classList.add('ended');
+                 else timeEl.classList.remove('ended');
+              }
+              
+              // 選択時間の表示更新
+              noteEl.textContent = state.displayNote.replace("セット:", "選択時間:");
+           }
+        }, 100);
+      <\/script></body></html>
+    `);
+    w.document.close();
 });
 
-popupWin.document.getElementById('pToggle').addEventListener('click', function(){
-if (running) pauseTimer(); else startTimer();
-});
-popupWin.document.getElementById('pReset').addEventListener('click', function(){ resetTimer(); });
-popupWin.document.getElementById('pClose').addEventListener('click', function(){ popupWin.close(); });
-popupWin.addEventListener('keydown', function(e){
-if (e.key === ' '){
-e.preventDefault();
-if (running) pauseTimer(); else startTimer();
-}
-});
-var boot = "(function(){\n" +
-" var d=document;\n" +
-" var pTime=d.getElementById('pTime');\n" +
-" var pNote=d.getElementById('pNote');\n" +
-" var pToggle=d.getElementById('pToggle');\n" +
-" var pFace=d.getElementById('pFace');\n" +
-" function two(n){return n<10?'0'+n:n;}\n" +
-" function render(){\n" +
-" var op = window.opener;\n" +
-" if (!op || op.closed || !op.getTimerState) return;\n" +
-" var s = op.getTimerState();\n" +
-" var ms = s.running ? (s.endAt - Date.now()) : s.remainingMs;\n" +
-" var abs = Math.abs(ms);\n" +
-" var totalSec = Math.ceil(abs/1000);\n" +
-" var m = Math.floor(totalSec/60);\n" +
-" var sec = totalSec%60;\n" +
-" pTime.textContent = (ms<0?'-':'') + two(m) + ':' + two(sec);\n" +
-" pNote.textContent = '選択時間: ' + s.selMin + '分 ' + s.selSec + '秒';\n" +
-" if (ms<=0){ pFace.classList.add('ended'); } else { pFace.classList.remove('ended'); }\n" +
-" pToggle.textContent = s.running ? '一時停止' : (ms < s.totalMs && ms>0 ? '再開' : '開始');\n" +
-" if (ms<=0 && op.ensureEndFired){ op.ensureEndFired(); }\n" +
-" }\n" +
-" render();\n" +
-" setInterval(render, 200);\n" +
-"})();";
-var sc = popupWin.document.createElement('script');
-sc.textContent = boot;
-popupWin.document.body.appendChild(sc);
-setPopupBtnText();
-updatePopupUI(false);
-}
-function closePopup(){ if (isPopupOpen()) popupWin.close(); }
-function updatePopupUI(throttle){
-if (!isPopupOpen()) return;
-var now = (window.performance && performance.now) ? performance.now() : Date.now();
-if (throttle && (now - lastPopupUpdate) < 160) return;
-lastPopupUpdate = now;
-
-var d = popupWin.document;
-var pTime = d.getElementById('pTime');
-var pNote = d.getElementById('pNote');
-var pToggle = d.getElementById('pToggle');
-var pFace = d.getElementById('pFace');
-
-if (pTime) pTime.textContent = timeEl.textContent;
-var baseNote = timeNoteEl ? timeNoteEl.textContent : '';
-if (pNote) pNote.textContent = baseNote; // ← 選択時間のみ表示
-if (pToggle) pToggle.textContent = startPauseBtn.textContent;
-if (pFace){
-if (timeEl.classList.contains('ended')) pFace.classList.add('ended');
-else pFace.classList.remove('ended');
-}
-}if (popupBtn){
-popupBtn.addEventListener('click', function(){
-if (isPopupOpen()) closePopup(); else openPopup();
-});
-}
-window.addEventListener('beforeunload', function(){ if (isPopupOpen()) popupWin.close(); });
-/* ここまで: ポップアップ機能 */
-
-/* スケジュール（常にランダム開始でOK） */
-function getNames(){
-return [
-(p1 && p1.value ? p1.value.trim() : ""),
-(p2 && p2.value ? p2.value.trim() : ""),
-(p3 && p3.value ? p3.value.trim() : "")
-];
-}
-function getFilledNames(){
-return getNames().map(function(n){ return (n||"").trim(); }).filter(function(n){ return n !== ""; });
-}
-function getRolesForCount(n){ return n === 2 ? ROLES2 : ROLES3; }
-function validate(names){
-if (names.length < 2) return "参加者は2名以上で入力してください。";
-if (names.length > 3) return "参加者は最大3名までです。";
-for (var i=0;i<names.length;i++){
-for (var j=i+1;j<names.length;j++){
-if (names[i] === names[j]) return "参加者名が重複しています。区別できる名前にしてください。";
-}
-}
-return "";
-}
-function rngInt(maxExclusive){
-if (window.crypto && window.crypto.getRandomValues){
-var a = new Uint32Array(1);
-window.crypto.getRandomValues(a);
-return a[0] % maxExclusive;
-}
-return Math.floor(Math.random() * maxExclusive);
-}
-function shuffle(arr){
-var a = arr.slice();
-for (var i=a.length-1; i>0; i--){
-var j = rngInt(i+1); var t=a[i]; a[i]=a[j]; a[j]=t;
-}
-return a;
-}
-function genRotationSchedule(names, roles){
-var rounds = names.length; // 2名なら2ラウンド、3名なら3ラウンド
-var first = shuffle(names);
-var out = [];
-for (var r=0; r<rounds; r++){
-var m = {};
-for (var i=0; i<roles.length; i++){
-m[roles[i]] = first[(i + r) % names.length];
-}
-out.push(m);
-}
-return out;
-}
-function clearResults(){ resultsEl.innerHTML = ""; }
-function buildRoundCard(index, roles){
-var wrap = document.createElement('div'); wrap.className = 'round';
-var h = document.createElement('h3');
-var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = '第' + (index+1) + '回';
-h.textContent = '割り当て'; h.prepend(badge);
-wrap.appendChild(h);
-var list = document.createElement('div'); list.className = 'assign';
-for (var i=0;i<roles.length;i++){
-var row = document.createElement('div'); row.className = 'role';
-var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = roles[i];
-var name = document.createElement('div'); name.className = 'name placeholder'; name.textContent = '？？？';
-row.appendChild(tag); row.appendChild(name); list.appendChild(row);
-}
-wrap.appendChild(list);
-return wrap;
-}
-function renderPlaceholders(roundCount, roles){
-clearResults();
-for (var r=0; r<roundCount; r++){ resultsEl.appendChild(buildRoundCard(r, roles)); }
-}
-
-/* スロット風アニメ */
-function rollName(el, finalName, duration, pool){
-duration = duration || 900;
-pool = pool && pool.length ? pool : [finalName];
-var start = performance.now ? performance.now() : Date.now();
-var handle;
-function step(){
-var now = performance.now ? performance.now() : Date.now();
-var t = now - start;
-if (t >= duration){
-el.textContent = finalName;
-el.classList.remove('placeholder');
-cancelAnimationFrame(handle);
-return;
-}
-var idx = rngInt(pool.length);
-el.textContent = pool[idx];
-handle = requestAnimationFrame(step);
-}
-handle = requestAnimationFrame(step);
-}
-
-/* 紙吹雪（小さめ） */
-function spawnConfetti(count){
-if (!isMotionOk()) return;
-var colors = ['#60a5fa','#3b82f6','#10b981','#34d399','#f59e0b','#ef4444','#8b5cf6'];
-var n = count || 40;
-for (var i=0;i<n;i++){
-var d = document.createElement('div');
-d.className = 'confetti-piece';
-var left = Math.random()*100;
-d.style.left = left + 'vw';
-d.style.background = colors[rngInt(colors.length)];
-d.style.animationDuration = (900 + rngInt(600)) + 'ms';
-d.style.transform = 'rotate(' + rngInt(360) + 'deg)';
-document.body.appendChild(d);
-(function(node){
-setTimeout(function(){ if (node && node.parentNode) node.parentNode.removeChild(node); }, 1400);
-})(d);
-}
-}
-
-/* 結果の描画（スロット風＋紙吹雪対応） */
-function revealSchedule(schedule, roles, namesPool){
-var cards = Array.prototype.slice.call(resultsEl.querySelectorAll('.round'));
-var step = 220;
-var baseDelay = 160;
-var idxGlobal = 0;
-var totalItems = cards.length * roles.length;
-
-for (var rIdx=0; rIdx<cards.length; rIdx++){
-var rows = Array.prototype.slice.call(cards[rIdx].querySelectorAll('.role'));
-for (var i=0; i<roles.length; i++){
-(function(roundIndex, roleIndex, when, globalIndex){
-var row = rows[roleIndex];
-var nameEl = row.querySelector('.name');
-var finalName = schedule[roundIndex][roles[roleIndex]];
-setTimeout(function(){
-if (isMotionOk()){
-rollName(nameEl, finalName, 900 + rngInt(200), namesPool);
-}else{
-nameEl.textContent = finalName;
-nameEl.classList.remove('placeholder');
-}
-row.classList.add('reveal');
-setTimeout(function(){ row.classList.remove('reveal'); }, 240);
-}, when);
-})(rIdx, i, baseDelay + (idxGlobal*step), idxGlobal);
-idxGlobal++;
-}
-}
-var totalDelay = baseDelay + (totalItems*step) + 1000;
-if (effectsEnabled){
-setTimeout(function(){ spawnConfetti(48); }, totalDelay);
-}
-}
-
-function scheduleToText(schedule, roles){
-var lines = [];
-for (var r=0; r<schedule.length; r++){
-lines.push('第' + (r+1) + '回');
-for (var i=0; i<roles.length; i++){
-var role = roles[i];
-lines.push('- ' + role + ': ' + schedule[r][role]);
-}
-if (r < schedule.length - 1) lines.push('');
-}
-return lines.join('\n');
-}
-
-var lastScheduleText = '';
-function draw(){
-errEl.style.display = 'none';
-if (sessionStorage.getItem('consented')!=='1'){ showConsent(); return; }
-
-var names = getFilledNames();
-var msg = validate(names);
-if (msg){
-errEl.textContent = msg;
-errEl.style.display = 'block';
-return;
-}
-
-var currRoles = getRolesForCount(names.length);
-var schedule = genRotationSchedule(names, currRoles);
-
-renderPlaceholders(names.length, currRoles);
-
-setTimeout(function(){
-revealSchedule(schedule, currRoles, names);
-}, 180);
-
-redrawBtn.disabled = false;
-copyBtn.disabled = false;
-
-lastScheduleText = scheduleToText(schedule, currRoles);
-copyBtn.dataset.text = lastScheduleText;
-}
-
-/* イベント（抽選系） */
-drawBtn.addEventListener('click', draw);
-redrawBtn.addEventListener('click', draw);
-copyBtn.addEventListener('click', function(){
-var text = copyBtn.dataset.text || lastScheduleText || '';
-try{
-if (navigator.clipboard && navigator.clipboard.writeText){
-navigator.clipboard.writeText(text).then(function(){
-var old = copyBtn.textContent;
-copyBtn.textContent = 'コピーしました！';
-setTimeout(function(){ copyBtn.textContent = old; }, 1300);
-}, function(){ throw new Error('Clipboard API failed'); });
-} else {
-var ta = document.createElement('textarea');
-ta.value = text; document.body.appendChild(ta);
-ta.select(); document.execCommand('copy');
-document.body.removeChild(ta);
-var old2 = copyBtn.textContent;
-copyBtn.textContent = 'コピーしました！';
-setTimeout(function(){ copyBtn.textContent = old2; }, 1300);
-}
-} catch(e){
-alert('コピーに失敗しました。手動でコピーしてください。');
-}
-});
-
-/* 初期表示 */
-function init(){
-renderPlaceholders(3, ROLES3);
-
-// 呼鈴（プリアラーム）設定を復元
-restoreChimeSettings();
-
-// 保存されたタイマー設定の復元（無ければ 25:00）
-if (!restoreTimerSelection()){
-setPreset(25, 0);
-}
-
-// setPreset 内で renderTime と updateTimeNote を実行しているが冪等のため残す
-renderTime(remainingMs);
-updateTimeNote();
-updateChimeNote();
-
-
-// ポップアップボタンの表示更新
-setPopupBtnText();
-}
-init();
+// 初期化
+const consentOverlay = document.getElementById('consentOverlay');
+if (sessionStorage.getItem('consented') === '1'){ consentOverlay.style.display='none'; document.getElementById('appRoot').removeAttribute('aria-hidden'); SoundFX.init(); }
+document.getElementById('consentOk').addEventListener('click', () => { sessionStorage.setItem('consented', '1'); SoundFX.click(); consentOverlay.style.display='none'; document.getElementById('appRoot').removeAttribute('aria-hidden'); SoundFX.init(); });
+document.getElementById('fxToggle').addEventListener('change', (e) => { SoundFX.enabled = e.target.checked; if(e.target.checked) SoundFX.click(); });
 
 })();
 </script>
-
-</body> </html>
+</body>
+</html>
