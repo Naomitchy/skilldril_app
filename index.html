@@ -22,12 +22,12 @@ body{
   transition: background 1.5s ease;
 }
 
-/* ストームモード */
+/* ストームモード（抽選中の暗転演出） */
 body.storm-mode { background: var(--storm-bg); color: #e5e7eb; }
 body.storm-mode .panel, body.storm-mode .role { background: #1f2937; border-color: #374151; color: #f3f4f6; }
 body.storm-mode h1, body.storm-mode .logo { filter: brightness(0.8); }
 
-/* 画面振動 */
+/* 画面振動アニメーション */
 body.shaking { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
 @keyframes shake {
   10%, 90% { transform: translate3d(-2px, 0, 0); }
@@ -38,6 +38,7 @@ body.shaking { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
 
 .container{ max-width:1000px; margin:0 auto; padding:24px 16px 48px; position:relative; z-index:10; }
 
+/* 雷描画用キャンバス */
 #fxCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
 
 header{ display:flex; align-items:flex-start; gap:12px; margin-bottom:16px }
@@ -50,7 +51,7 @@ h1{ font-size:22px; margin:0 }
   transition: background 0.3s, border-color 0.3s;
 }
 
-/* フォーム */
+/* 入力フォーム */
 .grid{ display:grid; grid-template-columns: repeat(3, minmax(180px,1fr)); gap:12px }
 .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px 6px }
 .field input{
@@ -59,7 +60,7 @@ h1{ font-size:22px; margin:0 }
 }
 .field input:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(59,130,246,.16); }
 
-/* ボタン */
+/* ボタン類 */
 .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
 button{
   appearance:none; border:none; cursor:pointer;
@@ -78,6 +79,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border-radius:16px; padding:14px; box-shadow:var(--shadow);
   min-height:164px; transition: all 0.3s; position: relative; overflow: hidden;
 }
+/* 雷に打たれた後の帯電エフェクト */
 .round.electrified { border-color: var(--electric); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); animation: pulseGlow 2s infinite alternate; }
 @keyframes pulseGlow { from{box-shadow:0 0 10px rgba(59,130,246,0.2);} to{box-shadow:0 0 25px rgba(59,130,246,0.6);} }
 
@@ -89,6 +91,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display:flex; align-items:center; gap:12px; padding:12px; border-radius:12px;
   background:#ffffff; border:1px solid var(--border); position:relative; overflow:hidden;
 }
+/* 名前決定時のフラッシュ */
 .role.struck { animation: strikeFlash 0.4s ease-out forwards; }
 @keyframes strikeFlash { 0% { background: #fff; filter: brightness(3); } 50% { background: #e0f2fe; } 100% { background: var(--card); } }
 
@@ -96,6 +99,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .name{ font-size:16px; font-weight:700; }
 .placeholder{ color:var(--muted); font-weight:500; letter-spacing:.08em }
 
+/* 質問表示ボックス */
 .lucky-box{
   margin-top:20px; padding:16px; border-radius:16px; background: #f9fafb; border: 1px solid var(--border);
   text-align:center; display:none; animation: popIn 0.4s ease-out;
@@ -244,7 +248,7 @@ window.timerGlobal = {
   displayNote: "セット: 15分 0秒"
 };
 
-/* --- Sound Engine --- */
+/* --- Sound Engine (Web Audio API) --- */
 const SoundFX = {
   ctx: null,
   enabled: true,
@@ -323,10 +327,12 @@ const SoundFX = {
     this.stopRumble();
     const t = this.ctx.currentTime;
     const noise = this.createNoiseBuffer();
+    // クラック音
     const src1 = this.ctx.createBufferSource(); src1.buffer = noise;
     const filter1 = this.ctx.createBiquadFilter(); filter1.type = 'highpass'; filter1.frequency.value = 500;
     const gain1 = this.ctx.createGain(); gain1.gain.setValueAtTime(0.8, t); gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
     src1.connect(filter1).connect(gain1).connect(this.ctx.destination); src1.start(t);
+    // 重低音
     const src2 = this.ctx.createBufferSource(); src2.buffer = noise;
     const filter2 = this.ctx.createBiquadFilter(); filter2.type = 'lowpass'; filter2.frequency.setValueAtTime(800, t); filter2.frequency.linearRampToValueAtTime(50, t + 1.5);
     const gain2 = this.ctx.createGain(); gain2.gain.setValueAtTime(1.0, t); gain2.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
@@ -339,7 +345,7 @@ const SoundFX = {
   }
 };
 
-/* --- Visual FX --- */
+/* --- Visual FX (Lightning) --- */
 const VisualFX = {
   canvas: document.getElementById('fxCanvas'),
   ctx: null,
@@ -400,28 +406,55 @@ VisualFX.init();
 const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3');
 const resultsEl = document.getElementById('results'), luckyBox = document.getElementById('luckyBox'), luckyText = document.getElementById('luckyText');
 
-// 20 Questions List
+// 全40問：正統派＋雷テーマ＋丁寧な毒舌＋シュール
 const QUESTIONS = [
+  // 【正統派：ビジョンと希望】
   "✨ もし何の制約もなかったら、本当は何をしたいですか？",
   "🚀 1年後、あなたは何を達成して祝杯をあげていますか？",
   "📖 もし今のあなたの人生が「本」だとしたら、今の章にどんなタイトルをつけますか？",
   "👴 80歳になったあなたが、今のあなたにアドバイスするとしたら？",
   "🌅 理想的な「最高の一日」のスケジュールはどんなものですか？",
+  "💪 あなたがまだ使いきれていない「スーパーパワー（強み）」は何ですか？",
+  "🦶 その目標のために、今日踏み出せる「最初の一歩」は？",
+  "🚪 今、勇気を出して開けるべき「ドア」はどれですか？",
+  "🎁 今、あなたが誰かに「ありがとう」を伝えるとしたら誰ですか？",
+  "🧱 あなたの人生の土台となっている「成功体験」は何ですか？",
+  "🧭 迷ったとき、いつも立ち返る「原点」はどこにありますか？",
+  "🎯 この時間の最後、どんな気持ちになっていたいですか？",
+
+  // 【雷・閃き：エネルギーと直感】
   "⚡️ 今、雷に打たれたような衝撃的なアイデアを出すとしたら？",
   "⚡️ あなたの中で、今にも爆発しそうな「情熱」や「エネルギー」はどこにありますか？",
   "⛈️ 雨降って地固まる。最近の困難から学んだ「ギフト」は何ですか？",
   "💡 最近、「あっ！」と気づいたこと（アハ体験）はありますか？",
-  "✨ あなたが絶対に譲れない「大切な価値観」は何ですか？",
-  "💪 あなたがまだ使いきれていない「スーパーパワー（強み）」は何ですか？",
-  "😄 最近、時間を忘れるほど没頭したことや、心から笑ったことは？",
-  "🧸 子供の頃の夢や、大好きだった遊びは何でしたか？",
-  "🛑 前に進むために、今「やめるべきこと」や「手放すべきこと」はありますか？",
-  "🦶 その目標のために、今日踏み出せる「最初の一歩」は？",
-  "🦁 もし「失敗しない」と保証されていたら、何に挑戦しますか？",
-  "🚪 今、勇気を出して開けるべき「ドア」はどれですか？",
-  "🎁 今、あなたが誰かに「ありがとう」を伝えるとしたら誰ですか？",
-  "🕵️‍♂️ 尊敬するあの人なら、今のあなたの状況をどう乗り越えますか？",
-  "🎯 この時間の最後、どんな気持ちになっていたいですか？"
+  "🔥 もし今、積み上げてきたものを一度壊して作り直すとしたら、どこから手をつけますか？",
+  "🌪️ 嵐が過ぎ去った後、あなたの手元に残る「本当に大切なもの」は何ですか？",
+
+  // 【丁寧な毒舌：人間の業（ごう）と見栄】
+  "😈 正直なところ、その目標は「誰かにちやほやされたい」という下心が何％ありますか？",
+  "🏷️ あなたが今、商品棚に並んでいるとしたら、背中にはどんな「取扱注意」のラベルが貼ってありますか？",
+  "🤥 「忙しい」と言い訳しているけれど、本当は「やりたくないだけ」のことは何ですか？",
+  "🕶️ もし、あなたの今の悩みが「悲劇のヒロインを演じるための脚本」だとしたら、観客は何て言っていますか？",
+  "🚮 あなたが抱えているプライドの中で、今すぐ捨てても誰も困らない「粗大ゴミ」はどれですか？",
+  "🍛 「いつかやります」と言い続けて、そろそろ賞味期限が切れかかっている夢はありませんか？",
+  "🛑 アクセルを全開に踏みながら、同時に「怖い」と言ってブレーキを踏んでいる理由はなんですか？",
+  "🌵 誰も見ていないし、誰にも褒められないとしても、あなたはその努力を続けられますか？",
+  "🤐 墓場まで持っていくと決めているけれど、本当はここで吐き出してしまいたい「弱音」はありますか？",
+  "💊 その悩みにつける「特効薬」を発明しました。薬の名前と、ちょっとした副作用は何ですか？",
+  "🧱 あなたが自分で自分の周りに積み上げてしまった「壁」、内側から壊すなら何を使いますか？",
+
+  // 【シュール＆ウィット：視点の強制移動】
+  "👽 もし宇宙人が今のあなたを見ていたら、母星へのレポートに何と書くでしょうか？",
+  "👟 あなたの「靴」が喋りだしました。「おい、もっと〇〇へ連れて行ってくれよ！」どこに行きたがっていますか？",
+  "🤖 AIロボットがあなたの「取扱説明書」を作りました。一番最初の「注意書き」には何と書いてありますか？",
+  "🐈 もしあなたが「気まぐれなネコ」だったら、今の悩みに対してどう反応しますか？（寝る？ひっかく？無視？）",
+  "🍛 今のあなたの精神状態を「カレーの辛さ」で表すと？（甘口？激辛？コクが足りない？）",
+  "🤴 あなたが「地球の王様」になりました。最初に作る、私利私欲にまみれた法律は？",
+  "🧙‍♂️ 魔法の杖で、今の状況を「動物」に変えるとしたら、どんな動物になりますか？",
+  "🧊 冷蔵庫の奥で忘れ去られている「保冷剤」の気持ちになって、今の一言をお願いします。",
+  "👻 もし、あなたの苦手な人が今のあなたのアドバイザーになったら、どんな嫌味な正論を言ってくると思いますか？",
+  "🔥 あなたが今、密かに「あいつには負けたくない」と嫉妬している相手は誰ですか？",
+  "🤡 あなたの人生を「B級映画」にするなら、ポスターのキャッチコピーは何にしますか？"
 ];
 
 function draw(){
