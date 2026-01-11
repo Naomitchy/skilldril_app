@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Coaching スキルドリル - Selectable FX Edition</title>
+<title>Coaching スキルドリル - Workshop Edition</title>
 <style>
 /* --- ベーススタイル --- */
 :root{
@@ -17,7 +17,7 @@
   --electric: #0ea5e9;
 
   /* Animal Mode Colors */
-  --animal-bg: #fff1f2; /* 薄いピンク */
+  --animal-bg: #fff1f2; 
   --animal-accent: #f472b6;
 }
 *{box-sizing:border-box}
@@ -28,11 +28,11 @@ body{
 }
 
 /* --- モード別スタイル --- */
-
 /* Storm Mode */
 body.mode-storm { background: var(--storm-bg); color: #e5e7eb; }
-body.mode-storm .panel, body.mode-storm .role { background: #1f2937; border-color: #374151; color: #f3f4f6; }
+body.mode-storm .panel, body.mode-storm .role, body.mode-storm .matrix-cell { background: #1f2937; border-color: #374151; color: #f3f4f6; }
 body.mode-storm h1, body.mode-storm .logo { filter: brightness(0.8); }
+body.mode-storm textarea { background: #374151; color: #f3f4f6; border-color: #4b5563; }
 
 /* Animal Mode */
 body.mode-animal { background: var(--animal-bg); }
@@ -63,14 +63,24 @@ h1{ font-size:22px; margin:0 }
   transition: background 0.3s, border-color 0.3s;
 }
 
+/* タブ切り替え */
+.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin: -16px -16px 16px -16px; padding: 0 16px; background: rgba(0,0,0,0.02); border-top-left-radius: 16px; border-top-right-radius: 16px; }
+.tab { padding: 12px 20px; cursor: pointer; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; font-size: 14px; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+body.mode-animal .tab.active { color: var(--animal-accent); border-bottom-color: var(--animal-accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
 /* 入力フォーム */
 .grid{ display:grid; grid-template-columns: repeat(3, minmax(180px,1fr)); gap:12px }
 .field label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px 6px }
-.field input{
+.field input, .field textarea, .field select{
   width:100%; padding:12px 14px; background:#fff; color:var(--ink);
-  border:1px solid var(--border); border-radius:12px; outline:none;
+  border:1px solid var(--border); border-radius:12px; outline:none; font-family: inherit;
 }
-.field input:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(59,130,246,.16); }
+.field textarea { height: 120px; resize: vertical; line-height: 1.5; }
+.field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(59,130,246,.16); }
 
 /* ボタン類 */
 .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
@@ -84,7 +94,7 @@ button:active{ transform:scale(0.96); }
 .secondary{ color:var(--ink); background:#fff; border:1px solid var(--border); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* 結果カード */
+/* 結果カード (Normal Mode) */
 .results{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; perspective: 1000px; }
 .round{
   background:var(--card); border:1px solid var(--border);
@@ -92,12 +102,24 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   min-height:164px; transition: all 0.3s; position: relative; overflow: hidden;
 }
 
+/* 結果テーブル (Group Mode) */
+.matrix-container { overflow-x: auto; border:1px solid var(--border); border-radius: 12px; margin-top: 16px; }
+.matrix { width: 100%; border-collapse: collapse; min-width: 600px; background: var(--card); }
+.matrix th, .matrix td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+.matrix th { background: rgba(0,0,0,0.03); color: var(--muted); font-weight: 700; white-space: nowrap; }
+.matrix-cell { transition: all 0.3s; }
+.role-line { display: block; margin-bottom: 4px; }
+.role-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; width: 60px; text-align: center; margin-right: 6px; }
+.rb-coach { background: #dbeafe; color: #1e40af; }
+.rb-client { background: #d1fae5; color: #065f46; }
+.rb-obs { background: #f3f4f6; color: #4b5563; }
+
 /* Storm Effect */
-.round.electrified { border-color: var(--electric); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); animation: pulseGlow 2s infinite alternate; }
+.round.electrified, .matrix-cell.electrified { border-color: var(--electric); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); animation: pulseGlow 2s infinite alternate; }
 @keyframes pulseGlow { from{box-shadow:0 0 10px rgba(59,130,246,0.2);} to{box-shadow:0 0 25px rgba(59,130,246,0.6);} }
 
 /* Animal Effect */
-.round.festive { border-color: #f472b6; box-shadow: 0 10px 30px rgba(244, 114, 182, 0.25); animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.round.festive, .matrix-cell.festive { border-color: #f472b6; box-shadow: 0 10px 30px rgba(244, 114, 182, 0.25); animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes popScale { from{transform:scale(0.95); opacity:0;} to{transform:scale(1); opacity:1;} }
 
 .round h3{ margin:0 0 10px; font-size:15px; display:flex; align-items:center; gap:10px; color:var(--muted); }
@@ -110,7 +132,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 /* 名前決定時のフラッシュ */
-.role.struck { animation: strikeFlash 0.4s ease-out forwards; }
+.role.struck, .matrix-cell.struck { animation: strikeFlash 0.4s ease-out forwards; }
 @keyframes strikeFlash { 0% { background: #fff; filter: brightness(3); } 50% { background: #e0f2fe; } 100% { background: var(--card); } }
 
 /* 動物アイコンアニメーション */
@@ -193,16 +215,52 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   </header>
 
   <section class="panel">
-    <div style="font-weight:700;margin-bottom:8px">参加者と抽選</div>
-    <div class="grid">
-      <div class="field"><label>参加者1</label><input id="p1" type="text" placeholder="参加者1"></div>
-      <div class="field"><label>参加者2</label><input id="p2" type="text" placeholder="参加者2"></div>
-      <div class="field"><label>参加者3</label><input id="p3" type="text" placeholder="参加者3"></div>
+    <div class="tabs">
+        <div class="tab active" data-target="mode-normal">通常モード (3名)</div>
+        <div class="tab" data-target="mode-group">グループモード (大人数)</div>
     </div>
-    <div class="buttons">
-      <button id="drawBtn" class="primary">抽選する</button>
-      <button id="redrawBtn" class="secondary" disabled>もう一度 抽選</button>
-      <button id="copyBtn" class="secondary" disabled>結果をコピー</button>
+
+    <div id="mode-normal" class="tab-content active">
+        <div style="font-weight:700;margin-bottom:8px">参加者と抽選</div>
+        <div class="grid">
+          <div class="field"><label>参加者1</label><input id="p1" type="text" placeholder="参加者1"></div>
+          <div class="field"><label>参加者2</label><input id="p2" type="text" placeholder="参加者2"></div>
+          <div class="field"><label>参加者3</label><input id="p3" type="text" placeholder="参加者3"></div>
+        </div>
+    </div>
+
+    <div id="mode-group" class="tab-content">
+        <div class="grid" style="grid-template-columns: 2fr 1fr;">
+            <div class="field">
+                <label>参加者リスト（改行区切りで入力）</label>
+                <textarea id="bulkParticipants" placeholder="佐藤&#13;&#10;鈴木&#13;&#10;田中&#13;&#10;高橋&#13;&#10;伊藤&#13;&#10;..."></textarea>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="field">
+                    <label>ラウンド数</label>
+                    <select id="roundCount">
+                        <option value="1">1回</option>
+                        <option value="2">2回</option>
+                        <option value="3" selected>3回</option>
+                        <option value="4">4回</option>
+                        <option value="5">5回</option>
+                    </select>
+                </div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.4;">
+                    <strong>仕様:</strong><br>
+                    - 3〜4名のルームを自動作成<br>
+                    - 部屋固定で役割をローテーション<br>
+                    - 2名部屋は極力回避します
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="buttons" style="margin-top:16px;">
+      <button id="drawBtn" class="primary">抽選・グループ分け</button>
+      <button id="redrawBtn" class="secondary" disabled>もう一度</button>
+      <button id="copyBtn" class="secondary" disabled>結果コピー</button>
+      <button id="copyCsvBtn" class="secondary" disabled style="display:none;">Zoom CSVコピー</button>
     </div>
     
     <div class="fx-row">
@@ -282,15 +340,10 @@ const STORAGE_KEYS = {
   FX_MODE: 'drill_fx_mode'
 };
 
-// 初期設定（デフォルト）
 let defaultSettings = {
-  m: 25, // デフォルト25分
-  s: 0,
-  chime: 3, // デフォルト3分前
-  fxMode: 'storm' // デフォルトはStorm
+  m: 25, s: 0, chime: 3, fxMode: 'storm'
 };
 
-// 保存された設定があれば読み込む
 function loadSettings(){
   const sm = localStorage.getItem(STORAGE_KEYS.TIMER_M);
   const ss = localStorage.getItem(STORAGE_KEYS.TIMER_S);
@@ -302,19 +355,16 @@ function loadSettings(){
   if(sc !== null) defaultSettings.chime = parseInt(sc);
   if(fx !== null) defaultSettings.fxMode = fx;
 
-  // UIに反映
   document.getElementById('mInput').value = defaultSettings.m;
   document.getElementById('sInput').value = defaultSettings.s;
   document.getElementById('chimeM').value = defaultSettings.chime;
   
-  // ラジオボタン反映
   const radio = document.querySelector(`input[name="fxMode"][value="${defaultSettings.fxMode}"]`);
   if(radio) radio.checked = true;
 }
 
 loadSettings();
 
-// 外部連携用のステート（ポップアップから参照される）
 window.timerGlobal = {
   endTime: 0,
   totalMs: (defaultSettings.m * 60 + defaultSettings.s) * 1000,
@@ -326,84 +376,44 @@ window.timerGlobal = {
 
 /* --- Sound Engine (Web Audio API) --- */
 const SoundFX = {
-  ctx: null,
-  rumbleOsc: null,
-  rumbleGain: null,
-  
+  ctx: null, rumbleOsc: null, rumbleGain: null,
   init: function() {
-    if (!this.ctx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AC();
-    }
+    if (!this.ctx) { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); }
     if (this.ctx.state === 'suspended') this.ctx.resume();
   },
-
   createNoiseBuffer: function() {
     if (!this.ctx) return null;
-    const size = this.ctx.sampleRate * 2;
-    const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i=0; i<size; i++) data[i] = Math.random() * 2 - 1;
-    return buf;
+    const size = this.ctx.sampleRate * 2; const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+    const data = buf.getChannelData(0); for (let i=0; i<size; i++) data[i] = Math.random() * 2 - 1; return buf;
   },
-
   playTone: function(freq, type, duration, vol, time) {
-    if (!this.ctx) return;
-    const t = time || this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, t);
-    gain.gain.setValueAtTime(vol, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-    osc.connect(gain).connect(this.ctx.destination);
-    osc.start(t);
-    osc.stop(t + duration);
+    if (!this.ctx) return; const t = time || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t); gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.connect(gain).connect(this.ctx.destination); osc.start(t); osc.stop(t + duration);
   },
-
   chime: function() {
-    if (!this.ctx) this.init(); 
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    this.playTone(660, 'sine', 0.8, 0.15, now);
-    this.playTone(550, 'sine', 1.2, 0.15, now + 0.6);
+    if (!this.ctx) this.init(); if (!this.ctx) return; const now = this.ctx.currentTime;
+    this.playTone(660, 'sine', 0.8, 0.15, now); this.playTone(550, 'sine', 1.2, 0.15, now + 0.6);
   },
-
-  // Storm用: 地鳴り
   startRumble: function() {
-    if (!this.ctx) return;
-    this.stopRumble();
-    const noise = this.createNoiseBuffer();
-    const src = this.ctx.createBufferSource();
-    src.buffer = noise;
-    src.loop = true;
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 120;
-    const gain = this.ctx.createGain();
-    gain.gain.value = 0;
-    src.connect(filter).connect(gain).connect(this.ctx.destination);
-    src.start();
+    if (!this.ctx) return; this.stopRumble();
+    const noise = this.createNoiseBuffer(); const src = this.ctx.createBufferSource(); src.buffer = noise; src.loop = true;
+    const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 120;
+    const gain = this.ctx.createGain(); gain.gain.value = 0;
+    src.connect(filter).connect(gain).connect(this.ctx.destination); src.start();
     gain.gain.linearRampToValueAtTime(0.5, this.ctx.currentTime + 2);
-    this.rumbleOsc = src;
-    this.rumbleGain = gain;
+    this.rumbleOsc = src; this.rumbleGain = gain;
   },
-
   stopRumble: function() {
     if (this.rumbleOsc) {
-      try {
-        this.rumbleGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
-        this.rumbleOsc.stop(this.ctx.currentTime + 0.5);
-      } catch(e){}
+      try { this.rumbleGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5); this.rumbleOsc.stop(this.ctx.currentTime + 0.5); } catch(e){}
       this.rumbleOsc = null;
     }
   },
-
-  // Storm用: 雷鳴
   thunder: function() {
-    if (!this.ctx) return;
-    this.stopRumble();
-    const t = this.ctx.currentTime;
+    if (!this.ctx) return; this.stopRumble(); const t = this.ctx.currentTime;
     const noise = this.createNoiseBuffer();
     const src1 = this.ctx.createBufferSource(); src1.buffer = noise;
     const filter1 = this.ctx.createBiquadFilter(); filter1.type = 'highpass'; filter1.frequency.value = 500;
@@ -414,433 +424,415 @@ const SoundFX = {
     const gain2 = this.ctx.createGain(); gain2.gain.setValueAtTime(1.0, t); gain2.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
     src2.connect(filter2).connect(gain2).connect(this.ctx.destination); src2.start(t);
   },
-
-  // Animal用: ファンファーレ
   fanfare: function() {
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime;
-    // C Major Arpeggio
-    this.playTone(523.25, 'triangle', 0.2, 0.1, t);       // C5
-    this.playTone(659.25, 'triangle', 0.2, 0.1, t + 0.1); // E5
-    this.playTone(783.99, 'triangle', 0.4, 0.1, t + 0.2); // G5
-    this.playTone(1046.50, 'triangle', 0.8, 0.1, t + 0.3);// C6
+    if (!this.ctx) return; const t = this.ctx.currentTime;
+    this.playTone(523.25, 'triangle', 0.2, 0.1, t); this.playTone(659.25, 'triangle', 0.2, 0.1, t + 0.1);
+    this.playTone(783.99, 'triangle', 0.4, 0.1, t + 0.2); this.playTone(1046.50, 'triangle', 0.8, 0.1, t + 0.3);
   },
-
-  click: function() {
-    if (!this.ctx) return;
-    this.playTone(1000, 'sine', 0.1, 0.05);
-  }
+  click: function() { if (!this.ctx) return; this.playTone(1000, 'sine', 0.1, 0.05); }
 };
 
 /* --- Visual FX (Canvas) --- */
 const VisualFX = {
-  canvas: document.getElementById('fxCanvas'),
-  ctx: null,
-  elements: [], // 雷や紙吹雪などのオブジェクト
+  canvas: document.getElementById('fxCanvas'), ctx: null, elements: [],
   init: function() {
     if(this.canvas){
-      this.ctx = this.canvas.getContext('2d');
-      this.resize();
-      window.addEventListener('resize', () => this.resize());
-      this.loop();
+      this.ctx = this.canvas.getContext('2d'); this.resize();
+      window.addEventListener('resize', () => this.resize()); this.loop();
     }
   },
   resize: function() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
-  
-  // 雷生成
   createBoltPath: function(x, y, len) {
-    const path = [{x, y}];
-    let currX = x, currY = y;
+    const path = [{x, y}]; let currX = x, currY = y;
     while(currY < this.canvas.height + 100) {
-      currX += (Math.random() - 0.5) * len * 2;
-      currY += (Math.random() * len) + 10;
-      path.push({x: currX, y: currY});
-      if(Math.random() < 0.1) break;
-    }
-    return path;
+      currX += (Math.random() - 0.5) * len * 2; currY += (Math.random() * len) + 10;
+      path.push({x: currX, y: currY}); if(Math.random() < 0.1) break;
+    } return path;
   },
   strike: function() {
     this.elements.push({ type: 'screen', alpha: 0.9, decay: 0.08, color: '255,255,255' });
     const startX = Math.random() * this.canvas.width;
     this.elements.push({ type: 'bolt', path: this.createBoltPath(startX, -50, 30), alpha: 1, decay: 0.04, width: 3 });
   },
-
-  // 紙吹雪生成
   confetti: function() {
     const colors = ['#f472b6', '#34d399', '#60a5fa', '#fbbf24', '#a78bfa'];
     for(let i=0; i<50; i++){
-      this.elements.push({
-        type: 'dot',
-        x: this.canvas.width/2, y: this.canvas.height/2,
-        vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15 - 5,
-        color: colors[Math.floor(Math.random()*colors.length)],
-        size: Math.random()*8 + 4,
-        alpha: 1, decay: 0.01 + Math.random()*0.02
-      });
+      this.elements.push({ type: 'dot', x: this.canvas.width/2, y: this.canvas.height/2, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15 - 5, color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*8 + 4, alpha: 1, decay: 0.01 + Math.random()*0.02 });
     }
   },
-
   loop: function() {
-    requestAnimationFrame(() => this.loop());
-    if(!this.ctx) return;
+    requestAnimationFrame(() => this.loop()); if(!this.ctx) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
     for(let i=this.elements.length-1; i>=0; i--){
-      const el = this.elements[i];
-      el.alpha -= el.decay;
+      const el = this.elements[i]; el.alpha -= el.decay;
       if(el.alpha <= 0){ this.elements.splice(i, 1); continue; }
-
-      if(el.type === 'screen') {
-        this.ctx.fillStyle = `rgba(${el.color},${el.alpha})`;
-        this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
-      } else if(el.type === 'bolt') {
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = `rgba(255, 255, 255, ${el.alpha})`;
-        this.ctx.shadowBlur = 15; this.ctx.shadowColor = '#0ea5e9'; this.ctx.lineWidth = el.width;
-        if(el.path.length > 0) {
-          this.ctx.moveTo(el.path[0].x, el.path[0].y);
-          for(let p of el.path) this.ctx.lineTo(p.x, p.y);
-        }
-        this.ctx.stroke(); this.ctx.shadowBlur = 0;
-      } else if(el.type === 'dot') {
-        el.x += el.vx;
-        el.y += el.vy;
-        el.vy += 0.5; // gravity
-        this.ctx.beginPath();
-        this.ctx.fillStyle = el.color;
-        this.ctx.globalAlpha = el.alpha;
-        this.ctx.arc(el.x, el.y, el.size, 0, Math.PI*2);
-        this.ctx.fill();
-        this.ctx.globalAlpha = 1;
-      }
+      if(el.type === 'screen') { this.ctx.fillStyle = `rgba(${el.color},${el.alpha})`; this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height); }
+      else if(el.type === 'bolt') { this.ctx.beginPath(); this.ctx.strokeStyle = `rgba(255, 255, 255, ${el.alpha})`; this.ctx.shadowBlur = 15; this.ctx.shadowColor = '#0ea5e9'; this.ctx.lineWidth = el.width; if(el.path.length > 0) { this.ctx.moveTo(el.path[0].x, el.path[0].y); for(let p of el.path) this.ctx.lineTo(p.x, p.y); } this.ctx.stroke(); this.ctx.shadowBlur = 0; }
+      else if(el.type === 'dot') { el.x += el.vx; el.y += el.vy; el.vy += 0.5; this.ctx.beginPath(); this.ctx.fillStyle = el.color; this.ctx.globalAlpha = el.alpha; this.ctx.arc(el.x, el.y, el.size, 0, Math.PI*2); this.ctx.fill(); this.ctx.globalAlpha = 1; }
     }
   }
 };
 VisualFX.init();
 
 /* --- App Logic --- */
+// Tab Switching
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.target).classList.add('active');
+        // UI reset when tab changes
+        document.getElementById('copyCsvBtn').style.display = (tab.dataset.target === 'mode-group') ? 'inline-block' : 'none';
+    });
+});
+
 const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3');
 const resultsEl = document.getElementById('results'), luckyBox = document.getElementById('luckyBox'), luckyText = document.getElementById('luckyText');
 
-// 動物絵文字リスト
 const ANIMALS = ['🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐵','🦊','🐱','🐶','🐸','🐹','🐰','🦄','🐔','🦦','🦖','🦒'];
-
-// 質問リスト
 const QUESTIONS = [
-  "✨ もし何の制約もなかったら、本当は何をしたいですか？",
-  "🚀 1年後、あなたは何を達成して祝杯をあげていますか？",
-  "📖 もし今のあなたの人生が「本」だとしたら、今の章にどんなタイトルをつけますか？",
-  "👴 80歳になったあなたが、今のあなたにアドバイスするとしたら？",
-  "🌅 理想的な「最高の一日」のスケジュールはどんなものですか？",
-  "💪 あなたがまだ使いきれていない「スーパーパワー（強み）」は何ですか？",
-  "🦶 その目標のために、今日踏み出せる「最初の一歩」は？",
-  "🚪 今、勇気を出して開けるべき「ドア」はどれですか？",
-  "🎁 今、あなたが誰かに「ありがとう」を伝えるとしたら誰ですか？",
-  "🧱 あなたの人生の土台となっている「成功体験」は何ですか？",
-  "🧭 迷ったとき、いつも立ち返る「原点」はどこにありますか？",
-  "🎯 この時間の最後、どんな気持ちになっていたいですか？",
-  "⚡️ 今、雷に打たれたような衝撃的なアイデアを出すとしたら？",
-  "⚡️ あなたの中で、今にも爆発しそうな「情熱」や「エネルギー」はどこにありますか？",
-  "⛈️ 雨降って地固まる。最近の困難から学んだ「ギフト」は何ですか？",
-  "💡 最近、「あっ！」と気づいたこと（アハ体験）はありますか？",
-  "🔥 もし今、積み上げてきたものを一度壊して作り直すとしたら、どこから手をつけますか？",
-  "🌪️ 嵐が過ぎ去った後、あなたの手元に残る「本当に大切なもの」は何ですか？",
-  "😈 正直なところ、その目標は「誰かにちやほやされたい」という下心が何％ありますか？",
-  "🏷️ あなたが今、商品棚に並んでいるとしたら、背中にはどんな「取扱注意」のラベルが貼ってありますか？",
-  "🤥 「忙しい」と言い訳しているけれど、本当は「やりたくないだけ」のことは何ですか？",
-  "🕶️ もし、あなたの今の悩みが「悲劇のヒロインを演じるための脚本」だとしたら、観客は何て言っていますか？",
-  "🚮 あなたが抱えているプライドの中で、今すぐ捨てても誰も困らない「粗大ゴミ」はどれですか？",
-  "🍛 「いつかやります」と言い続けて、そろそろ賞味期限が切れかかっている夢はありませんか？",
-  "🛑 アクセルを全開に踏みながら、同時に「怖い」と言ってブレーキを踏んでいる理由はなんですか？",
-  "🌵 誰も見ていないし、誰にも褒められないとしても、あなたはその努力を続けられますか？",
-  "🤐 墓場まで持っていくと決めているけれど、本当はここで吐き出してしまいたい「弱音」はありますか？",
-  "💊 その悩みにつける「特効薬」を発明しました。薬の名前と、ちょっとした副作用は何ですか？",
-  "🧱 あなたが自分で自分の周りに積み上げてしまった「壁」、内側から壊すなら何を使いますか？",
-  "👽 もし宇宙人が今のあなたを見ていたら、母星へのレポートに何と書くでしょうか？",
+  "✨ もし何の制約もなかったら、本当は何をしたいですか？", "🚀 1年後、あなたは何を達成して祝杯をあげていますか？",
+  "📖 もし今のあなたの人生が「本」だとしたら、今の章にどんなタイトルをつけますか？", "👴 80歳になったあなたが、今のあなたにアドバイスするとしたら？",
+  "🌅 理想的な「最高の一日」のスケジュールはどんなものですか？", "💪 あなたがまだ使いきれていない「スーパーパワー（強み）」は何ですか？",
+  "🦶 その目標のために、今日踏み出せる「最初の一歩」は？", "🚪 今、勇気を出して開けるべき「ドア」はどれですか？",
+  "🎁 今、あなたが誰かに「ありがとう」を伝えるとしたら誰ですか？", "🧱 あなたの人生の土台となっている「成功体験」は何ですか？",
+  "🧭 迷ったとき、いつも立ち返る「原点」はどこにありますか？", "🎯 この時間の最後、どんな気持ちになっていたいですか？",
+  "⚡️ 今、雷に打たれたような衝撃的なアイデアを出すとしたら？", "⚡️ あなたの中で、今にも爆発しそうな「情熱」や「エネルギー」はどこにありますか？",
+  "⛈️ 雨降って地固まる。最近の困難から学んだ「ギフト」は何ですか？", "💡 最近、「あっ！」と気づいたこと（アハ体験）はありますか？",
+  "🔥 もし今、積み上げてきたものを一度壊して作り直すとしたら、どこから手をつけますか？", "🌪️ 嵐が過ぎ去った後、あなたの手元に残る「本当に大切なもの」は何ですか？",
+  "😈 正直なところ、その目標は「誰かにちやほやされたい」という下心が何％ありますか？", "🏷️ あなたが今、商品棚に並んでいるとしたら、背中にはどんな「取扱注意」のラベルが貼ってありますか？",
+  "🤥 「忙しい」と言い訳しているけれど、本当は「やりたくないだけ」のことは何ですか？", "🕶️ もし、あなたの今の悩みが「悲劇のヒロインを演じるための脚本」だとしたら、観客は何て言っていますか？",
+  "🚮 あなたが抱えているプライドの中で、今すぐ捨てても誰も困らない「粗大ゴミ」はどれですか？", "🍛 「いつかやります」と言い続けて、そろそろ賞味期限が切れかかっている夢はありませんか？",
+  "🛑 アクセルを全開に踏みながら、同時に「怖い」と言ってブレーキを踏んでいる理由はなんですか？", "🌵 誰も見ていないし、誰にも褒められないとしても、あなたはその努力を続けられますか？",
+  "🤐 墓場まで持っていくと決めているけれど、本当はここで吐き出してしまいたい「弱音」はありますか？", "💊 その悩みにつける「特効薬」を発明しました。薬の名前と、ちょっとした副作用は何ですか？",
+  "🧱 あなたが自分で自分の周りに積み上げてしまった「壁」、内側から壊すなら何を使いますか？", "👽 もし宇宙人が今のあなたを見ていたら、母星へのレポートに何と書くでしょうか？",
   "👟 あなたの「靴」が喋りだしました。「おい、もっと〇〇へ連れて行ってくれよ！」どこに行きたがっていますか？",
   "🤖 AIロボットがあなたの「取扱説明書」を作りました。一番最初の「注意書き」には何と書いてありますか？",
   "🐈 もしあなたが「気まぐれなネコ」だったら、今の悩みに対してどう反応しますか？（寝る？ひっかく？無視？）",
   "🍛 今のあなたの精神状態を「カレーの辛さ」で表すと？（甘口？激辛？コクが足りない？）",
-  "🤴 あなたが「地球の王様」になりました。最初に作る、私利私欲にまみれた法律は？",
-  "🧙‍♂️ 魔法の杖で、今の状況を「動物」に変えるとしたら、どんな動物になりますか？",
-  "🧊 冷蔵庫の奥で忘れ去られている「保冷剤」の気持ちになって、今の一言をお願いします。",
-  "👻 もし、あなたの苦手な人が今のあなたのアドバイザーになったら、どんな嫌味な正論を言ってくると思いますか？",
-  "🔥 あなたが今、密かに「あいつには負けたくない」と嫉妬している相手は誰ですか？",
-  "🤡 あなたの人生を「B級映画」にするなら、ポスターのキャッチコピーは何にしますか？"
+  "🤴 あなたが「地球の王様」になりました。最初に作る、私利私欲にまみれた法律は？", "🧙‍♂️ 魔法の杖で、今の状況を「動物」に変えるとしたら、どんな動物になりますか？",
+  "🧊 冷蔵庫の奥で忘れ去られている「保冷剤」の気持ちになって、今の一言をお願いします。", "👻 もし、あなたの苦手な人が今のあなたのアドバイザーになったら、どんな嫌味な正論を言ってくると思いますか？",
+  "🔥 あなたが今、密かに「あいつには負けたくない」と嫉妬している相手は誰ですか？", "🤡 あなたの人生を「B級映画」にするなら、ポスターのキャッチコピーは何にしますか？"
 ];
 
+// 状態管理
+let currentResult = { text: '', csv: '' };
+
+// Group Logic: Split participants into groups of 3 (preferred) or 4
+function getGroups(names) {
+    const n = names.length;
+    if (n < 3) return null; 
+
+    // Special case for 5 to avoid a group of 2
+    if (n === 5) return [[...names]];
+
+    let count4 = 0;
+    let count3 = 0;
+    const rem = n % 3;
+
+    if (rem === 0) {
+        count3 = n / 3;
+    } else if (rem === 1) {
+        // e.g. 4 (3+1) -> one 4
+        // e.g. 7 (3+3+1) -> one 4, one 3
+        count4 = 1;
+        count3 = (n - 4) / 3;
+    } else if (rem === 2) {
+        // e.g. 8 (3+3+2) -> two 4s (4+4)
+        count4 = 2;
+        count3 = (n - 8) / 3;
+    }
+
+    const groups = [];
+    let ptr = 0;
+    for(let i=0; i<count4; i++) { groups.push(names.slice(ptr, ptr+4)); ptr += 4; }
+    for(let i=0; i<count3; i++) { groups.push(names.slice(ptr, ptr+3)); ptr += 3; }
+    
+    // Shuffle groups and members within groups
+    for (let g of groups) {
+        for (let i = g.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random()*(i+1));
+            [g[i], g[j]] = [g[j], g[i]];
+        }
+    }
+    return groups;
+}
+
+// Role Logic
+function getRoles(members, roundIdx) {
+    const n = members.length;
+    // 4人グループの特別パターン (連続オブザーバー回避)
+    if (n === 4) {
+        // 0=Coach, 1=Client, others=Obs
+        const patterns = [
+            {c:0, cl:1}, // Ob: 2,3
+            {c:2, cl:3}, // Ob: 0,1 (Wrap: prev ob 2,3 become actors)
+            {c:1, cl:2}, // Ob: 3,0
+            {c:3, cl:0}, // Ob: 1,2
+            {c:0, cl:2}  // Round 5 (Extra)
+        ];
+        const pat = patterns[roundIdx % patterns.length];
+        return {
+            coach: members[pat.c],
+            client: members[pat.cl],
+            observers: members.filter((_,i) => i !== pat.c && i !== pat.cl)
+        };
+    }
+    // Default Cyclic for 3 or 5
+    const cIdx = roundIdx % n;
+    const clIdx = (roundIdx + 1) % n;
+    return {
+        coach: members[cIdx],
+        client: members[clIdx],
+        observers: members.filter((_,i) => i !== cIdx && i !== clIdx)
+    };
+}
+
 function draw(){
-  const names = [p1.value, p2.value, p3.value].map(n=>n.trim()).filter(n=>n);
+  // Determine Mode
+  const isGroupMode = document.getElementById('mode-group').classList.contains('active');
+  let names = [];
+  
+  if (isGroupMode) {
+      names = document.getElementById('bulkParticipants').value.split(/\r\n|\n|\r/).map(n=>n.trim()).filter(n=>n);
+  } else {
+      names = [p1.value, p2.value, p3.value].map(n=>n.trim()).filter(n=>n);
+  }
+
   if (names.length < 2) { alert("2名以上入力してください"); return; }
   
-  // モード取得と保存
-  const mode = document.querySelector('input[name="fxMode"]:checked').value;
-  localStorage.setItem(STORAGE_KEYS.FX_MODE, mode);
+  const fxMode = document.querySelector('input[name="fxMode"]:checked').value;
+  localStorage.setItem(STORAGE_KEYS.FX_MODE, fxMode);
 
   luckyBox.classList.remove('show');
   resultsEl.innerHTML = "";
   
-  // モードに応じた初期演出
-  if(mode === 'storm'){
-      document.body.classList.remove('mode-animal');
-      document.body.classList.add('mode-storm');
-      SoundFX.startRumble();
-  } else if(mode === 'animal'){
-      document.body.classList.remove('mode-storm');
-      document.body.classList.add('mode-animal');
-      SoundFX.startRumble(); // Animalでもドラムロール的に使用（音は同じ）
+  // FX Setup
+  if(fxMode === 'storm'){
+      document.body.classList.remove('mode-animal'); document.body.classList.add('mode-storm'); SoundFX.startRumble();
+  } else if(fxMode === 'animal'){
+      document.body.classList.remove('mode-storm'); document.body.classList.add('mode-animal'); SoundFX.startRumble();
   } else {
       document.body.classList.remove('mode-storm', 'mode-animal');
   }
-  
-  const roles = names.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
-  const cards = [];
 
-  // カード枠作成
-  for(let i=0; i<names.length; i++){
-    const card = document.createElement('div'); card.className = 'round';
-    card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
-    const list = card.querySelector('.assign');
-    roles.forEach(role => {
-      const row = document.createElement('div'); row.className = 'role';
-      row.innerHTML = `<div class="tag">${role}</div><div class="name placeholder">???</div>`;
-      list.appendChild(row);
-    });
-    resultsEl.appendChild(card);
-    cards.push(card);
-  }
-
-  const shuffled = [...names];
-  for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
   const question = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
   const luckyAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
 
-  // 結果表示関数
-  const showResults = () => {
-    cards.forEach((card, roundIdx) => {
-      const rows = card.querySelectorAll('.role');
-      rows.forEach((row, roleIdx) => {
-        const pName = shuffled[(roundIdx + roleIdx) % names.length];
-        const nameEl = row.querySelector('.name');
+  const renderResults = () => {
+    resultsEl.innerHTML = "";
+    currentResult = { text: '', csv: 'Pre-assign Room Name,Email Address\n' };
+
+    if (!isGroupMode) {
+        // Normal Mode Rendering (Original Card Style)
+        const shuffled = [...names];
+        for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+        const roles = shuffled.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
         
-        if(mode === 'animal'){
-            const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-            nameEl.innerHTML = `<span class="animal-icon">${animal}</span> ${pName}`;
-        } else {
-            nameEl.textContent = pName;
+        // Assume 1 round for normal mode display usually, but let's just make 3 rounds cards like before? 
+        // Original logic was: names.length rounds.
+        for(let i=0; i<shuffled.length; i++){
+            const card = document.createElement('div'); card.className = 'round';
+            if(fxMode==='storm') card.classList.add('electrified');
+            if(fxMode==='animal') card.classList.add('festive');
+
+            card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
+            const list = card.querySelector('.assign');
+            
+            roles.forEach((roleTag, roleIdx) => {
+                const pName = shuffled[(i + roleIdx) % shuffled.length];
+                const row = document.createElement('div'); row.className = 'role';
+                if(fxMode==='storm') row.classList.add('struck');
+                
+                let dispName = pName;
+                if(fxMode === 'animal'){
+                    const ani = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+                    dispName = `<span class="animal-icon">${ani}</span> ${pName}`;
+                }
+                row.innerHTML = `<div class="tag">${roleTag}</div><div class="name">${dispName}</div>`;
+                list.appendChild(row);
+                
+                // Text Build
+                if(roleIdx===0) currentResult.text += `[第${i+1}回]\n`;
+                currentResult.text += `- ${roleTag}: ${pName}\n`;
+            });
+            currentResult.text += "\n";
+            resultsEl.appendChild(card);
         }
-        nameEl.classList.remove('placeholder');
-      });
-    });
-    
-    if(mode === 'animal') {
-        luckyText.innerHTML = `<span style="font-size:24px;display:block;margin-bottom:4px;">${luckyAnimal}</span> ${question}`;
+
     } else {
-        luckyText.textContent = question;
+        // Group Mode Rendering (Matrix Table)
+        const groups = getGroups(names);
+        if(!groups) { alert("人数が不足しています（最低3名）"); return; }
+        
+        const roundCount = parseInt(document.getElementById('roundCount').value);
+        const container = document.createElement('div'); container.className = 'matrix-container';
+        const table = document.createElement('table'); table.className = 'matrix';
+        
+        // Header
+        const thead = document.createElement('thead');
+        const hRow = document.createElement('tr');
+        hRow.innerHTML = `<th>Round</th>`;
+        groups.forEach((_, i) => { hRow.innerHTML += `<th>Room ${i+1} (${groups[i].length}名)</th>`; });
+        thead.appendChild(hRow); table.appendChild(thead);
+        
+        // Body
+        const tbody = document.createElement('tbody');
+        for(let r=0; r<roundCount; r++){
+            const row = document.createElement('tr');
+            row.innerHTML = `<td style="font-weight:700;color:var(--muted)">Round ${r+1}</td>`;
+            currentResult.text += `[Round ${r+1}]\n`;
+            
+            groups.forEach((members, gIdx) => {
+                const roleData = getRoles(members, r);
+                const cell = document.createElement('td');
+                cell.className = 'matrix-cell';
+                if(fxMode==='storm') cell.classList.add('electrified', 'struck');
+                if(fxMode==='animal') cell.classList.add('festive');
+
+                // CSV Logic (Zoom Pre-assignment)
+                // Need to output for EVERY round? Zoom only takes one set. 
+                // Usually pre-assign is static. We use Room 1, Room 2...
+                // Only add to CSV once per person
+                if (r === 0) {
+                    members.forEach(m => {
+                        currentResult.csv += `Room ${gIdx+1},${m}\n`;
+                    });
+                }
+
+                // Display
+                const lineC = `<span class="role-line"><span class="role-badge rb-coach">コーチ</span>${roleData.coach}</span>`;
+                const lineCl = `<span class="role-line"><span class="role-badge rb-client">クライアント</span>${roleData.client}</span>`;
+                const lineOb = roleData.observers.map(o => `<span class="role-line"><span class="role-badge rb-obs">オブザーブ</span>${o}</span>`).join('');
+                
+                cell.innerHTML = lineC + lineCl + lineOb;
+                row.appendChild(cell);
+
+                // Text Logic
+                currentResult.text += `Room ${gIdx+1}: C=${roleData.coach} / Cl=${roleData.client} / Ob=${roleData.observers.join(',')}\n`;
+            });
+            currentResult.text += "\n";
+            tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+        container.appendChild(table);
+        resultsEl.appendChild(container);
+        resultsEl.style.display = "block";
     }
+
+    // Lucky Topic Update
+    if(fxMode === 'animal') luckyText.innerHTML = `<span style="font-size:24px;display:block;margin-bottom:4px;">${luckyAnimal}</span> ${question}`;
+    else luckyText.textContent = question;
     
     luckyBox.classList.add('show');
     document.getElementById('redrawBtn').disabled = false;
     document.getElementById('copyBtn').disabled = false;
-    
-    let txt = "";
-    cards.forEach((c, i) => {
-      txt += `[第${i+1}回]\n`;
-      c.querySelectorAll('.role').forEach(r => txt += `- ${r.querySelector('.tag').textContent}: ${r.querySelector('.name').textContent.replace(/[\u2700-\u27BF]|(?:\uD83C[\uDF00-\uDFFF])|(?:\uD83D[\uDC00-\uDE4F])/g, '').trim()}\n`);
-      txt += "\n";
-    });
-    document.getElementById('copyBtn').dataset.text = txt + `\n⚡️ 問い: ${question}`;
+    if(isGroupMode) document.getElementById('copyCsvBtn').disabled = false;
+    currentResult.text += `\n⚡️ 問い: ${question}`;
   };
 
-  if (mode === 'none') {
-    // 即時表示
-    showResults();
+  if (fxMode === 'none') {
+    renderResults();
   } else {
-    // 待機演出 (2.5秒)
     setTimeout(() => {
-      if(mode === 'storm'){
-          SoundFX.thunder();
-          VisualFX.strike();
+      if(fxMode === 'storm'){
+          SoundFX.thunder(); VisualFX.strike();
           document.body.classList.add('shaking');
           setTimeout(()=> document.body.classList.remove('shaking'), 500);
-          document.body.classList.remove('mode-storm');
-          cards.forEach(c => {
-             c.classList.add('electrified');
-             c.querySelectorAll('.role').forEach(r => r.classList.add('struck'));
-          });
-      } else if(mode === 'animal'){
-          SoundFX.stopRumble();
-          SoundFX.fanfare();
-          VisualFX.confetti();
-          cards.forEach(c => c.classList.add('festive'));
+          document.body.classList.remove('mode-storm'); // keep dark theme elements but remove body override if needed, actually let's keep it
+      } else if(fxMode === 'animal'){
+          SoundFX.stopRumble(); SoundFX.fanfare(); VisualFX.confetti();
       }
-      showResults();
+      renderResults();
     }, 2500);
   }
 }
 
 document.getElementById('drawBtn').addEventListener('click', draw);
 document.getElementById('redrawBtn').addEventListener('click', draw);
-document.getElementById('copyBtn').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('copyBtn').dataset.text).then(()=>alert("コピーしました")));
+document.getElementById('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(currentResult.text).then(()=>alert("結果をコピーしました"));
+});
+document.getElementById('copyCsvBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(currentResult.csv).then(()=>alert("Zoom用CSV形式でコピーしました\n（Zoom設定画面でインポートできます）"));
+});
 
-// ラジオボタン変更時に音を鳴らす
 document.querySelectorAll('input[name="fxMode"]').forEach(r => {
     r.addEventListener('change', () => {
         SoundFX.click();
-        // UIプレビュー
         if(r.value === 'animal') document.body.classList.add('mode-animal');
         else document.body.classList.remove('mode-animal');
     });
 });
 
 /* --- タイマー機能 --- */
-let timerInterval = null;
-let chimeEnabled = true;
-let chimeBeforeMs = defaultSettings.chime * 60 * 1000;
-let chimeFired = false;
+let timerInterval = null; let chimeEnabled = true; let chimeBeforeMs = defaultSettings.chime * 60 * 1000; let chimeFired = false;
+const timeEl = document.getElementById('time'); const startBtn = document.getElementById('startPause'); const resetBtn = document.getElementById('resetTimer'); const endMsgEl = document.getElementById('endMsg'); const chimeToggle = document.getElementById('chimeToggle');
 
-const timeEl = document.getElementById('time');
-const startBtn = document.getElementById('startPause');
-const resetBtn = document.getElementById('resetTimer');
-const endMsgEl = document.getElementById('endMsg');
-const chimeToggle = document.getElementById('chimeToggle');
-
-chimeToggle.addEventListener('change', (e) => { 
-  chimeEnabled = e.target.checked; 
-  SoundFX.click(); 
-});
-
+chimeToggle.addEventListener('change', (e) => { chimeEnabled = e.target.checked; SoundFX.click(); });
 document.getElementById('applyChime').addEventListener('click', () => {
-  const m = parseInt(document.getElementById('chimeM').value);
-  chimeBeforeMs = m * 60 * 1000;
-  document.getElementById('chimeNote').textContent = `呼鈴: ${m}分前`;
-  localStorage.setItem(STORAGE_KEYS.CHIME_M, m);
-  SoundFX.click();
+  const m = parseInt(document.getElementById('chimeM').value); chimeBeforeMs = m * 60 * 1000;
+  document.getElementById('chimeNote').textContent = `呼鈴: ${m}分前`; localStorage.setItem(STORAGE_KEYS.CHIME_M, m); SoundFX.click();
 });
-
 document.getElementById('applyCustom').addEventListener('click', () => {
-  const m = parseInt(document.getElementById('mInput').value);
-  const s = parseInt(document.getElementById('sInput').value);
-  localStorage.setItem(STORAGE_KEYS.TIMER_M, m);
-  localStorage.setItem(STORAGE_KEYS.TIMER_S, s);
-  window.timerGlobal.totalMs = (m * 60 + s) * 1000;
-  resetTimerState();
+  const m = parseInt(document.getElementById('mInput').value); const s = parseInt(document.getElementById('sInput').value);
+  localStorage.setItem(STORAGE_KEYS.TIMER_M, m); localStorage.setItem(STORAGE_KEYS.TIMER_S, s); window.timerGlobal.totalMs = (m * 60 + s) * 1000; resetTimerState();
 });
-
 document.querySelectorAll('.chip').forEach(b => {
   b.addEventListener('click', () => {
-    const m = parseInt(b.dataset.min);
-    document.getElementById('mInput').value = m;
-    document.getElementById('sInput').value = 0;
-    document.getElementById('applyCustom').click();
+    const m = parseInt(b.dataset.min); document.getElementById('mInput').value = m; document.getElementById('sInput').value = 0; document.getElementById('applyCustom').click();
   });
 });
 
 function updateTimeDisplay(ms) {
-  const totalSec = Math.ceil(Math.max(0, ms) / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
+  const totalSec = Math.ceil(Math.max(0, ms) / 1000); const m = Math.floor(totalSec / 60); const s = totalSec % 60;
   const timeStr = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-  timeEl.textContent = timeStr;
-  window.timerGlobal.displayTime = timeStr;
+  timeEl.textContent = timeStr; window.timerGlobal.displayTime = timeStr;
 }
-
 function checkAlarms(remaining) {
-  if (chimeEnabled && !chimeFired && remaining <= chimeBeforeMs && remaining > 0) {
-    chimeFired = true;
-    SoundFX.chime();
-  }
+  if (chimeEnabled && !chimeFired && remaining <= chimeBeforeMs && remaining > 0) { chimeFired = true; SoundFX.chime(); }
   if (remaining <= 0) {
-    stopTimer();
-    timeEl.classList.add('ended');
-    endMsgEl.textContent = "⚡️ TIME'S UP!";
-    endMsgEl.classList.add('show');
-    window.timerGlobal.isEnded = true;
-    
-    // タイムアップ時の音（モード依存）
+    stopTimer(); timeEl.classList.add('ended'); endMsgEl.textContent = "⚡️ TIME'S UP!"; endMsgEl.classList.add('show'); window.timerGlobal.isEnded = true;
     const mode = document.querySelector('input[name="fxMode"]:checked').value;
-    if(mode === 'storm') { SoundFX.thunder(); VisualFX.strike(); }
-    else if(mode === 'animal') { SoundFX.fanfare(); VisualFX.confetti(); }
-    else { SoundFX.chime(); } // 無効モードでも音だけは鳴らす
+    if(mode === 'storm') { SoundFX.thunder(); VisualFX.strike(); } else if(mode === 'animal') { SoundFX.fanfare(); VisualFX.confetti(); } else { SoundFX.chime(); }
   }
 }
-
 function tick() {
   if (!window.timerGlobal.isRunning) return;
   const remaining = window.timerGlobal.endTime - Date.now();
-  updateTimeDisplay(remaining);
-  checkAlarms(remaining);
+  updateTimeDisplay(remaining); checkAlarms(remaining);
   if (remaining > 0) timerInterval = requestAnimationFrame(tick);
 }
-
-function stopTimer() {
-  window.timerGlobal.isRunning = false;
-  cancelAnimationFrame(timerInterval);
-  startBtn.textContent = "開始";
-}
-
+function stopTimer() { window.timerGlobal.isRunning = false; cancelAnimationFrame(timerInterval); startBtn.textContent = "開始"; }
 function resetTimerState() {
-  stopTimer();
-  timeEl.classList.remove('ended');
-  endMsgEl.classList.remove('show');
-  updateTimeDisplay(window.timerGlobal.totalMs);
-  chimeFired = false;
-  window.timerGlobal.isEnded = false;
-  
-  const m = Math.floor(window.timerGlobal.totalMs / 60000);
-  const s = (window.timerGlobal.totalMs % 60000) / 1000;
-  const note = `セット: ${m}分 ${s}秒`;
-  document.getElementById('timeNote').textContent = note;
-  window.timerGlobal.displayNote = note;
-  
-  // 初期ロード時にもUIを整合させる
+  stopTimer(); timeEl.classList.remove('ended'); endMsgEl.classList.remove('show');
+  updateTimeDisplay(window.timerGlobal.totalMs); chimeFired = false; window.timerGlobal.isEnded = false;
+  const m = Math.floor(window.timerGlobal.totalMs / 60000); const s = (window.timerGlobal.totalMs % 60000) / 1000;
+  const note = `セット: ${m}分 ${s}秒`; document.getElementById('timeNote').textContent = note; window.timerGlobal.displayNote = note;
   document.getElementById('chimeNote').textContent = `呼鈴: ${document.getElementById('chimeM').value}分前`;
   chimeBeforeMs = parseInt(document.getElementById('chimeM').value) * 60 * 1000;
-
   SoundFX.click();
 }
-
 resetTimerState();
 
 startBtn.addEventListener('click', () => {
-  if (window.timerGlobal.isRunning) {
-    stopTimer();
-    startBtn.textContent = "再開";
-  } else {
+  if (window.timerGlobal.isRunning) { stopTimer(); startBtn.textContent = "再開"; } else {
     if (window.timerGlobal.isEnded || timeEl.textContent === "00:00") {
       const parts = timeEl.textContent.split(':');
-      if(parts[0]=="00" && parts[1]=="00") {
-          window.timerGlobal.endTime = Date.now() + window.timerGlobal.totalMs;
-          chimeFired = false;
-          timeEl.classList.remove('ended');
-          endMsgEl.classList.remove('show');
-          window.timerGlobal.isEnded = false;
-      }
-    } else {
-       const parts = timeEl.textContent.split(':');
-       const currentMs = (parseInt(parts[0])*60 + parseInt(parts[1])) * 1000;
-       window.timerGlobal.endTime = Date.now() + currentMs;
-    }
-    window.timerGlobal.isRunning = true;
-    startBtn.textContent = "一時停止";
-    SoundFX.init();
-    tick();
+      if(parts[0]=="00" && parts[1]=="00") { window.timerGlobal.endTime = Date.now() + window.timerGlobal.totalMs; chimeFired = false; timeEl.classList.remove('ended'); endMsgEl.classList.remove('show'); window.timerGlobal.isEnded = false; }
+    } else { const parts = timeEl.textContent.split(':'); const currentMs = (parseInt(parts[0])*60 + parseInt(parts[1])) * 1000; window.timerGlobal.endTime = Date.now() + currentMs; }
+    window.timerGlobal.isRunning = true; startBtn.textContent = "一時停止"; SoundFX.init(); tick();
   }
 });
-
 resetBtn.addEventListener('click', resetTimerState);
 
-/* --- ポップアップ機能 --- */
 document.getElementById('popupBtn').addEventListener('click', () => {
-    const height = 300;
-    const width = 340;
-    const top = window.screen.availHeight - height;
+    const height = 300; const width = 340; const top = window.screen.availHeight - height;
     const w = window.open('', 'TimerPopup', `width=${width},height=${height},left=0,top=${top}`);
-    w.document.write(`<!doctype html><html><head><title>Timer</title><style>body{font-family:system-ui,sans-serif;text-align:center;padding:16px;background:#f9fafb;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:100%;max-width:280px;border:1px solid #e5e7eb;}#pTime{font-size:56px;font-weight:800;margin:0;font-variant-numeric:tabular-nums;color:#1f2937;}#pTime.ended{color:#ef4444;}#pNote{color:#6b7280;font-size:12px;margin-top:4px;margin-bottom:16px;font-weight:500;}.row{display:flex;gap:8px;justify-content:center;}button{flex:1;padding:10px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-weight:700;color:#374151;cursor:pointer;transition:0.1s;font-size:13px;}button:active{transform:scale(0.96);background:#f3f4f6;}button.close{color:#b91c1c;border-color:#fecaca;background:#fef2f2;}</style></head><body><div class="card"><div id="pTime">--:--</div><div id="pNote">選択時間: --</div><div class="row"><button id="btnStart">開始/停止</button><button id="btnReset">リセット</button><button id="btnClose" class="close">閉じる</button></div></div><script>const opener=window.opener;const timeEl=document.getElementById('pTime');const noteEl=document.getElementById('pNote');document.getElementById('btnStart').onclick=()=>opener.document.getElementById('startPause').click();document.getElementById('btnReset').onclick=()=>opener.document.getElementById('resetTimer').click();document.getElementById('btnClose').onclick=()=>window.close();setInterval(()=>{if(opener&&!opener.closed){const state=opener.timerGlobal;if(state.isRunning){const remaining=Math.max(0,state.endTime-Date.now());const totalSec=Math.ceil(remaining/1000);const m=Math.floor(totalSec/60);const s=totalSec%60;timeEl.textContent=m.toString().padStart(2,'0')+":"+s.toString().padStart(2,'0');timeEl.classList.remove('ended');}else{timeEl.textContent=state.displayTime;if(state.isEnded)timeEl.classList.add('ended');else timeEl.classList.remove('ended');}noteEl.textContent=state.displayNote.replace("セット:","選択時間:");}},100);<\/script></body></html>`);
-    w.document.close();
+    w.document.write(`<!doctype html><html><head><title>Timer</title><style>body{font-family:system-ui,sans-serif;text-align:center;padding:16px;background:#f9fafb;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:100%;max-width:280px;border:1px solid #e5e7eb;}#pTime{font-size:56px;font-weight:800;margin:0;font-variant-numeric:tabular-nums;color:#1f2937;}#pTime.ended{color:#ef4444;}#pNote{color:#6b7280;font-size:12px;margin-top:4px;margin-bottom:16px;font-weight:500;}.row{display:flex;gap:8px;justify-content:center;}button{flex:1;padding:10px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-weight:700;color:#374151;cursor:pointer;transition:0.1s;font-size:13px;}button:active{transform:scale(0.96);background:#f3f4f6;}button.close{color:#b91c1c;border-color:#fecaca;background:#fef2f2;}</style></head><body><div class="card"><div id="pTime">--:--</div><div id="pNote">選択時間: --</div><div class="row"><button id="btnStart">開始/停止</button><button id="btnReset">リセット</button><button id="btnClose" class="close">閉じる</button></div></div><script>const opener=window.opener;const timeEl=document.getElementById('pTime');const noteEl=document.getElementById('pNote');document.getElementById('btnStart').onclick=()=>opener.document.getElementById('startPause').click();document.getElementById('btnReset').onclick=()=>opener.document.getElementById('resetTimer').click();document.getElementById('btnClose').onclick=()=>window.close();setInterval(()=>{if(opener&&!opener.closed){const state=opener.timerGlobal;if(state.isRunning){const remaining=Math.max(0,state.endTime-Date.now());const totalSec=Math.ceil(remaining/1000);const m=Math.floor(totalSec/60);const s=totalSec%60;timeEl.textContent=m.toString().padStart(2,'0')+":"+s.toString().padStart(2,'0');timeEl.classList.remove('ended');}else{timeEl.textContent=state.displayTime;if(state.isEnded)timeEl.classList.add('ended');else timeEl.classList.remove('ended');}noteEl.textContent=state.displayNote.replace("セット:","選択時間:");}},100);<\/script></body></html>`); w.document.close();
 });
 
-// 初期化
 const consentOverlay = document.getElementById('consentOverlay');
 if (sessionStorage.getItem('consented') === '1'){ consentOverlay.style.display='none'; document.getElementById('appRoot').removeAttribute('aria-hidden'); SoundFX.init(); }
 document.getElementById('consentOk').addEventListener('click', () => { sessionStorage.setItem('consented', '1'); SoundFX.click(); consentOverlay.style.display='none'; document.getElementById('appRoot').removeAttribute('aria-hidden'); SoundFX.init(); });
