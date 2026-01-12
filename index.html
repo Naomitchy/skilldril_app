@@ -30,9 +30,11 @@ body{
 /* --- モード別スタイル --- */
 /* Storm Mode */
 body.mode-storm { background: var(--storm-bg); color: #e5e7eb; }
-body.mode-storm .panel, body.mode-storm .role, body.mode-storm .matrix-cell { background: #1f2937; border-color: #374151; color: #f3f4f6; }
+body.mode-storm .panel, body.mode-storm .role, body.mode-storm .matrix-cell, body.mode-storm .schedule-box { background: #1f2937; border-color: #374151; color: #f3f4f6; }
 body.mode-storm h1, body.mode-storm .logo { filter: brightness(0.8); }
 body.mode-storm textarea { background: #374151; color: #f3f4f6; border-color: #4b5563; }
+body.mode-storm .sch-row { border-bottom-color: #374151; }
+body.mode-storm .sch-row:hover { background: rgba(255,255,255,0.05); }
 
 /* Animal Mode */
 body.mode-animal { background: var(--animal-bg); }
@@ -82,6 +84,19 @@ body.mode-animal .tab.active { color: var(--animal-accent); border-bottom-color:
 .field textarea { height: 120px; resize: vertical; line-height: 1.5; }
 .field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(59,130,246,.16); }
 
+/* ラジオボタングループ（Group Mode用） */
+.radio-tile-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.radio-tile-label { cursor: pointer; position: relative; }
+.radio-tile-label input { position: absolute; opacity: 0; pointer-events: none; }
+.radio-tile { 
+  display: flex; flex-direction: column; align-items: flex-start; padding: 10px; 
+  border: 1px solid var(--border); border-radius: 8px; transition: all 0.2s; height: 100%;
+}
+.radio-tile-head { font-weight: 700; font-size: 13px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+.radio-tile-desc { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.radio-tile-label input:checked + .radio-tile { border-color: var(--accent); background: rgba(59, 130, 246, 0.05); box-shadow: 0 0 0 2px var(--accent); }
+body.mode-animal .radio-tile-label input:checked + .radio-tile { border-color: var(--animal-accent); background: rgba(244, 114, 182, 0.05); box-shadow: 0 0 0 2px var(--animal-accent); }
+
 /* ボタン類 */
 .buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px }
 button{
@@ -102,8 +117,19 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   min-height:164px; transition: all 0.3s; position: relative; overflow: hidden;
 }
 
-/* 結果テーブル (Group Mode) */
-.matrix-container { overflow-x: auto; border:1px solid var(--border); border-radius: 12px; margin-top: 16px; }
+/* 個人スケジュール表 (Group Mode - New) */
+.schedule-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); }
+.schedule-header { padding: 10px 14px; background: rgba(0,0,0,0.03); font-weight: 700; font-size: 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+.schedule-content { max-height: 300px; overflow-y: auto; font-size: 13px; }
+.sch-row { padding: 8px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.sch-row:last-child { border-bottom: none; }
+.sch-name { font-weight: 700; min-width: 80px; }
+.sch-flow { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; }
+.flow-step { background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+.step-arrow { color: var(--muted); font-size: 10px; }
+
+/* 結果テーブル (Group Mode - Matrix) */
+.matrix-container { overflow-x: auto; border:1px solid var(--border); border-radius: 12px; background: var(--card); }
 .matrix { width: 100%; border-collapse: collapse; min-width: 600px; background: var(--card); }
 .matrix th, .matrix td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
 .matrix th { background: rgba(0,0,0,0.03); color: var(--muted); font-weight: 700; white-space: nowrap; }
@@ -132,7 +158,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 /* 名前決定時のフラッシュ */
-.role.struck, .matrix-cell.struck { animation: strikeFlash 0.4s ease-out forwards; }
+.role.struck, .matrix-cell.struck, .sch-row.struck { animation: strikeFlash 0.4s ease-out forwards; }
 @keyframes strikeFlash { 0% { background: #fff; filter: brightness(3); } 50% { background: #e0f2fe; } 100% { background: var(--card); } }
 
 /* 動物アイコンアニメーション */
@@ -184,7 +210,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .dialog h2{ margin:0 0 12px; font-size:20px; }
 .bullet li{ margin:8px 0; line-height:1.6; color:#374151; }
 
-@media (max-width:720px){ .grid{ grid-template-columns: 1fr } }
+@media (max-width:720px){ 
+  .grid{ grid-template-columns: 1fr } 
+  .radio-tile-group { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -230,6 +259,38 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     </div>
 
     <div id="mode-group" class="tab-content">
+        <div style="font-weight:700;margin-bottom:8px">ワーク形式を選択</div>
+        <div class="radio-tile-group">
+            <label class="radio-tile-label">
+                <input type="radio" name="workType" value="A" checked>
+                <div class="radio-tile">
+                    <div class="radio-tile-head">型A：じっくり深化（3人/部屋固定）</div>
+                    <div class="radio-tile-desc">部屋を固定し、役割（C/Cl/Ob）をローテーション。安定して関係性を深めます。（余りは4名or2名に調整）</div>
+                </div>
+            </label>
+            <label class="radio-tile-label">
+                <input type="radio" name="workType" value="B">
+                <div class="radio-tile">
+                    <div class="radio-tile-head">型B：ペア集中（2人/部屋固定）</div>
+                    <div class="radio-tile-desc">部屋を固定し、交互にコーチ・クライアントを実施。1対1で集中します。（奇数の場合、1組だけ3名）</div>
+                </div>
+            </label>
+            <label class="radio-tile-label">
+                <input type="radio" name="workType" value="C">
+                <div class="radio-tile">
+                    <div class="radio-tile-head">型C：トリオ探求（3人/毎回シャッフル）</div>
+                    <div class="radio-tile-desc">ラウンドごとに3人組を作り直します。過去に組んだ相手と極力重複しないよう自動調整します。</div>
+                </div>
+            </label>
+            <label class="radio-tile-label">
+                <input type="radio" name="workType" value="D">
+                <div class="radio-tile">
+                    <div class="radio-tile-head">型D：ペア修行（2人/毎回シャッフル）</div>
+                    <div class="radio-tile-desc">ラウンドごとに2人組を作り直します。様々な相手と質量の高い練習を行いたい場合に最適です。</div>
+                </div>
+            </label>
+        </div>
+
         <div class="grid" style="grid-template-columns: 2fr 1fr;">
             <div class="field">
                 <label>参加者リスト（改行区切りで入力）</label>
@@ -247,10 +308,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                     </select>
                 </div>
                 <div style="font-size:12px; color:var(--muted); line-height:1.4;">
-                    <strong>仕様:</strong><br>
-                    - 3〜4名のルームを自動作成<br>
-                    - 部屋固定で役割をローテーション<br>
-                    - 2名部屋は極力回避します
+                    <strong>ポイント:</strong><br>
+                    - 型C/Dは自動で重複回避計算を行います<br>
+                    - 端数は自動的に調整されます
                 </div>
             </div>
         </div>
@@ -482,7 +542,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById(tab.dataset.target).classList.add('active');
-        // UI reset when tab changes
         document.getElementById('copyCsvBtn').style.display = (tab.dataset.target === 'mode-group') ? 'inline-block' : 'none';
     });
 });
@@ -502,7 +561,7 @@ const QUESTIONS = [
   "⛈️ 雨降って地固まる。最近の困難から学んだ「ギフト」は何ですか？", "💡 最近、「あっ！」と気づいたこと（アハ体験）はありますか？",
   "🔥 もし今、積み上げてきたものを一度壊して作り直すとしたら、どこから手をつけますか？", "🌪️ 嵐が過ぎ去った後、あなたの手元に残る「本当に大切なもの」は何ですか？",
   "😈 正直なところ、その目標は「誰かにちやほやされたい」という下心が何％ありますか？", "🏷️ あなたが今、商品棚に並んでいるとしたら、背中にはどんな「取扱注意」のラベルが貼ってありますか？",
-  "🤥 「忙しい」と言い訳しているけれど、本当は「やりたくないだけ」のことは何ですか？", "🕶️ もし、あなたの今の悩みが「悲劇のヒロインを演じるための脚本」だとしたら、観客は何て言っていますか？",
+  "🤥 「忙しい」と言い訳しているけれど、本当は「やりたくないだけ」のことは何ですか？", "🕶️ もし、あなたの苦手な人が今のあなたのアドバイザーになったら、どんな嫌味な正論を言ってくると思いますか？",
   "🚮 あなたが抱えているプライドの中で、今すぐ捨てても誰も困らない「粗大ゴミ」はどれですか？", "🍛 「いつかやります」と言い続けて、そろそろ賞味期限が切れかかっている夢はありませんか？",
   "🛑 アクセルを全開に踏みながら、同時に「怖い」と言ってブレーキを踏んでいる理由はなんですか？", "🌵 誰も見ていないし、誰にも褒められないとしても、あなたはその努力を続けられますか？",
   "🤐 墓場まで持っていくと決めているけれど、本当はここで吐き出してしまいたい「弱音」はありますか？", "💊 その悩みにつける「特効薬」を発明しました。薬の名前と、ちょっとした副作用は何ですか？",
@@ -519,81 +578,148 @@ const QUESTIONS = [
 // 状態管理
 let currentResult = { text: '', csv: '' };
 
-// Group Logic: Split participants into groups of 3 (preferred) or 4
-function getGroups(names) {
-    const n = names.length;
-    if (n < 3) return null; 
-
-    // Special case for 5 to avoid a group of 2
-    if (n === 5) return [[...names]];
-
-    let count4 = 0;
-    let count3 = 0;
-    const rem = n % 3;
-
-    if (rem === 0) {
-        count3 = n / 3;
-    } else if (rem === 1) {
-        // e.g. 4 (3+1) -> one 4
-        // e.g. 7 (3+3+1) -> one 4, one 3
-        count4 = 1;
-        count3 = (n - 4) / 3;
-    } else if (rem === 2) {
-        // e.g. 8 (3+3+2) -> two 4s (4+4)
-        count4 = 2;
-        count3 = (n - 8) / 3;
+// Array Shuffle Utility
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
+    return array;
+}
 
-    const groups = [];
-    let ptr = 0;
-    for(let i=0; i<count4; i++) { groups.push(names.slice(ptr, ptr+4)); ptr += 4; }
-    for(let i=0; i<count3; i++) { groups.push(names.slice(ptr, ptr+3)); ptr += 3; }
+// Group Logic
+function generateGroups(names, type) {
+    const n = names.length;
+    let baseSize = (type === 'A' || type === 'C') ? 3 : 2;
+    let groups = [];
     
-    // Shuffle groups and members within groups
-    for (let g of groups) {
-        for (let i = g.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random()*(i+1));
-            [g[i], g[j]] = [g[j], g[i]];
+    // Remainder handling
+    const remainder = n % baseSize;
+    let counts = { base: 0, extra: 0, smaller: 0 };
+    
+    if (baseSize === 2) {
+        // Pair logic (Type B/D)
+        if (remainder === 0) {
+            counts.base = n / 2;
+        } else {
+            // Remainder 1 -> One group of 3
+            counts.extra = 1; 
+            counts.base = (n - 3) / 2;
+        }
+    } else {
+        // Trio logic (Type A/C)
+        if (remainder === 0) {
+            counts.base = n / 3;
+        } else if (remainder === 1) {
+            // Remainder 1 -> One group of 4
+            counts.extra = 1;
+            counts.base = (n - 4) / 3;
+        } else if (remainder === 2) {
+            // Remainder 2 -> One group of 2
+            counts.smaller = 1;
+            counts.base = (n - 2) / 3;
         }
     }
-    return groups;
+
+    let ptr = 0;
+    // Create logic for Shuffle vs Fixed is handled outside, this just chunks the array
+    // We prioritize largest groups first usually, but for rendering consistency let's put irregulars at end
+    // Or maybe irregulars at start? Let's do standard chunks first.
+    
+    // Actually, for better randomness, we just need the structure [3,3,3,4] etc.
+    // Then we fill them.
+    let structure = [];
+    for(let i=0; i<counts.base; i++) structure.push(baseSize);
+    if(counts.extra > 0) structure.push(baseSize + 1);
+    if(counts.smaller > 0) structure.push(baseSize - 1);
+    
+    // Structure now contains e.g. [3,3,3,4]
+    return structure;
+}
+
+function solveShuffle(names, structure, historyMatrix) {
+    // Attempt to fill structure with names such that duplicates in history are minimized
+    // Simple Randomized Greedy with Retries
+    let bestGroups = null;
+    let minCost = Infinity;
+
+    for (let attempt = 0; attempt < 50; attempt++) {
+        let currentShuffled = shuffle([...names]);
+        let ptr = 0;
+        let currentGroups = [];
+        let cost = 0;
+
+        for (let size of structure) {
+            let grp = currentShuffled.slice(ptr, ptr + size);
+            ptr += size;
+            currentGroups.push(grp);
+            
+            // Calculate cost (how many pairs have met)
+            for (let i = 0; i < grp.length; i++) {
+                for (let j = i + 1; j < grp.length; j++) {
+                    let p1 = grp[i], p2 = grp[j];
+                    if (historyMatrix[p1] && historyMatrix[p1][p2]) {
+                        cost += historyMatrix[p1][p2];
+                    }
+                }
+            }
+        }
+
+        if (cost < minCost) {
+            minCost = cost;
+            bestGroups = currentGroups;
+            if (cost === 0) break; // Perfect found
+        }
+    }
+    return bestGroups;
 }
 
 // Role Logic
-function getRoles(members, roundIdx) {
+function getRoles(members, roundIdx, type) {
     const n = members.length;
-    // 4人グループの特別パターン (連続オブザーバー回避)
-    if (n === 4) {
-        // 0=Coach, 1=Client, others=Obs
+    // Rotate logic for fixed groups (A/B), simple position for shuffled (C/D)
+    // If shuffled, we can just assign based on position since group is random.
+    // However, keeping consistent rotation logic is fine too.
+    
+    // C=Coach, Cl=Client, Ob=Observer
+    let roles = { coach: '', client: '', observers: [] };
+    
+    if (n === 2) {
+        // Swap C/Cl
+        if (roundIdx % 2 === 0) { roles.coach = members[0]; roles.client = members[1]; }
+        else { roles.coach = members[1]; roles.client = members[0]; }
+    } else if (n === 3) {
+        // Cyclic C->Cl->Ob->C
+        const c = roundIdx % 3;
+        const cl = (roundIdx + 1) % 3;
+        roles.coach = members[c];
+        roles.client = members[cl];
+        roles.observers = members.filter((_, i) => i !== c && i !== cl);
+    } else if (n === 4) {
+        // Special patterns to avoid consecutive observer if possible (same as before)
         const patterns = [
-            {c:0, cl:1}, // Ob: 2,3
-            {c:2, cl:3}, // Ob: 0,1 (Wrap: prev ob 2,3 become actors)
-            {c:1, cl:2}, // Ob: 3,0
-            {c:3, cl:0}, // Ob: 1,2
-            {c:0, cl:2}  // Round 5 (Extra)
+            {c:0, cl:1}, {c:2, cl:3}, {c:1, cl:2}, {c:3, cl:0}, {c:0, cl:2}
         ];
         const pat = patterns[roundIdx % patterns.length];
-        return {
-            coach: members[pat.c],
-            client: members[pat.cl],
-            observers: members.filter((_,i) => i !== pat.c && i !== pat.cl)
-        };
+        roles.coach = members[pat.c];
+        roles.client = members[pat.cl];
+        roles.observers = members.filter((_, i) => i !== pat.c && i !== pat.cl);
     }
-    // Default Cyclic for 3 or 5
-    const cIdx = roundIdx % n;
-    const clIdx = (roundIdx + 1) % n;
-    return {
-        coach: members[cIdx],
-        client: members[clIdx],
-        observers: members.filter((_,i) => i !== cIdx && i !== clIdx)
-    };
+    
+    return roles;
 }
 
 function draw(){
-  // Determine Mode
   const isGroupMode = document.getElementById('mode-group').classList.contains('active');
-  let names = [];
+  const fxMode = document.querySelector('input[name="fxMode"]:checked').value;
+  localStorage.setItem(STORAGE_KEYS.FX_MODE, fxMode);
+
+  // Clear previous
+  resultsEl.innerHTML = "";
+  luckyBox.classList.remove('show');
   
+  // Get Participants
+  let names = [];
   if (isGroupMode) {
       names = document.getElementById('bulkParticipants').value.split(/\r\n|\n|\r/).map(n=>n.trim()).filter(n=>n);
   } else {
@@ -601,12 +727,6 @@ function draw(){
   }
 
   if (names.length < 2) { alert("2名以上入力してください"); return; }
-  
-  const fxMode = document.querySelector('input[name="fxMode"]:checked').value;
-  localStorage.setItem(STORAGE_KEYS.FX_MODE, fxMode);
-
-  luckyBox.classList.remove('show');
-  resultsEl.innerHTML = "";
   
   // FX Setup
   if(fxMode === 'storm'){
@@ -620,18 +740,21 @@ function draw(){
   const question = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
   const luckyAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
 
+  // --- RENDERING LOGIC ---
   const renderResults = () => {
     resultsEl.innerHTML = "";
-    currentResult = { text: '', csv: 'Pre-assign Room Name,Email Address\n' };
+    currentResult = { text: '', csv: '' }; // Reset CSV
+    let personalSchedule = {}; // Key: Name, Val: String of flow
+    names.forEach(n => personalSchedule[n] = []);
 
     if (!isGroupMode) {
-        // Normal Mode Rendering (Original Card Style)
-        const shuffled = [...names];
-        for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-        const roles = shuffled.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
+        // Normal Mode (Original Logic)
+        const shuffled = shuffle([...names]);
+        const rolesList = shuffled.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
+        currentResult.csv = 'Pre-assign Room Name,Email Address\n'; // Normal mode simple CSV
         
-        // Assume 1 round for normal mode display usually, but let's just make 3 rounds cards like before? 
-        // Original logic was: names.length rounds.
+        currentResult.text += `■ 参加者: ${shuffled.join(', ')}\n\n`;
+
         for(let i=0; i<shuffled.length; i++){
             const card = document.createElement('div'); card.className = 'round';
             if(fxMode==='storm') card.classList.add('electrified');
@@ -640,7 +763,7 @@ function draw(){
             card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
             const list = card.querySelector('.assign');
             
-            roles.forEach((roleTag, roleIdx) => {
+            rolesList.forEach((roleTag, roleIdx) => {
                 const pName = shuffled[(i + roleIdx) % shuffled.length];
                 const row = document.createElement('div'); row.className = 'role';
                 if(fxMode==='storm') row.classList.add('struck');
@@ -652,9 +775,9 @@ function draw(){
                 }
                 row.innerHTML = `<div class="tag">${roleTag}</div><div class="name">${dispName}</div>`;
                 list.appendChild(row);
-                
-                // Text Build
-                if(roleIdx===0) currentResult.text += `[第${i+1}回]\n`;
+
+                // Build text for clipboard
+                if(roleIdx === 0) currentResult.text += `[第${i+1}回]\n`;
                 currentResult.text += `- ${roleTag}: ${pName}\n`;
             });
             currentResult.text += "\n";
@@ -662,63 +785,162 @@ function draw(){
         }
 
     } else {
-        // Group Mode Rendering (Matrix Table)
-        const groups = getGroups(names);
-        if(!groups) { alert("人数が不足しています（最低3名）"); return; }
-        
+        // Group Mode Logic
+        const workType = document.querySelector('input[name="workType"]:checked').value;
         const roundCount = parseInt(document.getElementById('roundCount').value);
+        const structure = generateGroups(names, workType);
+        const isShuffle = (workType === 'C' || workType === 'D');
+        
+        // History Matrix for duplication check
+        let historyMatrix = {};
+        names.forEach(n => historyMatrix[n] = {});
+
+        // Data Container
+        let allRounds = []; // [ {round:1, groups:[{members:[], roles:{}}]} ]
+
+        // Generate Rounds
+        let fixedGroups = null;
+        if (!isShuffle) {
+            // Fixed: shuffle once, then split
+            let shuffledNames = shuffle([...names]);
+            fixedGroups = [];
+            let ptr = 0;
+            structure.forEach(size => {
+                fixedGroups.push(shuffledNames.slice(ptr, ptr+size));
+                ptr+=size;
+            });
+        }
+
+        for (let r=0; r<roundCount; r++) {
+            let groupsForRound = [];
+            
+            if (!isShuffle) {
+                groupsForRound = fixedGroups; // Use same groups
+            } else {
+                // Generate new groups with duplicate avoidance
+                groupsForRound = solveShuffle(names, structure, historyMatrix);
+                
+                // Update history
+                groupsForRound.forEach(grp => {
+                    for(let i=0; i<grp.length; i++){
+                        for(let j=i+1; j<grp.length; j++){
+                            let p1 = grp[i], p2 = grp[j];
+                            if(!historyMatrix[p1][p2]) historyMatrix[p1][p2] = 0;
+                            if(!historyMatrix[p2][p1]) historyMatrix[p2][p1] = 0;
+                            historyMatrix[p1][p2]++;
+                            historyMatrix[p2][p1]++;
+                        }
+                    }
+                });
+            }
+
+            let roundData = { round: r+1, rooms: [] };
+            
+            // CSV Header for this round
+            if (r > 0) currentResult.csv += `\n`; // Spacer
+            currentResult.csv += `[Round ${r+1}] Zoom Import Data (Copy lines below)\nPre-assign Room Name,Email Address\n`;
+
+            groupsForRound.forEach((members, gIdx) => {
+                let roles = getRoles(members, r, workType);
+                roundData.rooms.push({ roomNum: gIdx+1, members: members, roles: roles });
+                
+                // Update Personal Schedule
+                // Helper to find role
+                members.forEach(m => {
+                    let rStr = 'Ob';
+                    if(roles.coach === m) rStr = 'Coach';
+                    else if(roles.client === m) rStr = 'Client';
+                    
+                    personalSchedule[m].push({
+                        round: r+1,
+                        room: gIdx+1,
+                        role: rStr
+                    });
+                });
+
+                // Append to CSV for this round
+                members.forEach(m => {
+                    currentResult.csv += `Room ${gIdx+1},${m}\n`;
+                });
+            });
+            allRounds.push(roundData);
+        }
+
+        // --- Render 1: Personal Schedule (New!) ---
+        const scheduleBox = document.createElement('div');
+        scheduleBox.className = 'schedule-box';
+        scheduleBox.style.gridColumn = "1 / -1"; // Force vertical stack
+        scheduleBox.innerHTML = `<div class="schedule-header">📋 個人スケジュール（ここがコピーされます）</div><div class="schedule-content"></div>`;
+        const schContent = scheduleBox.querySelector('.schedule-content');
+        
+        let copyTextBuffer = "";
+        
+        names.sort().forEach(name => {
+            const row = document.createElement('div');
+            row.className = 'sch-row';
+            if(fxMode==='storm') row.classList.add('struck');
+            
+            let flowHtml = '';
+            let flowText = '';
+            
+            personalSchedule[name].forEach((step, i) => {
+                if(i > 0) {
+                    flowHtml += `<span class="step-arrow">➜</span>`;
+                    flowText += ` → `;
+                }
+                // Shorten Role for display
+                let rShort = step.role === 'Coach' ? 'C' : (step.role === 'Client' ? 'Cl' : 'Ob');
+                
+                flowHtml += `<div class="flow-step"><span>R${step.round}:Room${step.room}</span><strong style="font-size:11px">${rShort}</strong></div>`;
+                flowText += `R${step.round}:Room${step.room}(${rShort})`;
+            });
+            
+            row.innerHTML = `<div class="sch-name">${name}</div><div class="sch-flow">${flowHtml}</div>`;
+            schContent.appendChild(row);
+            
+            copyTextBuffer += `■ ${name}: ${flowText}\n`;
+        });
+        resultsEl.appendChild(scheduleBox);
+        currentResult.text = copyTextBuffer + `\n⚡️ 問い: ${question}`;
+
+        // --- Render 2: Master Matrix ---
         const container = document.createElement('div'); container.className = 'matrix-container';
+        container.style.gridColumn = "1 / -1"; // Force vertical stack
         const table = document.createElement('table'); table.className = 'matrix';
         
         // Header
         const thead = document.createElement('thead');
         const hRow = document.createElement('tr');
         hRow.innerHTML = `<th>Round</th>`;
-        groups.forEach((_, i) => { hRow.innerHTML += `<th>Room ${i+1} (${groups[i].length}名)</th>`; });
+        // Max rooms
+        const maxRooms = allRounds[0].rooms.length;
+        for(let i=0; i<maxRooms; i++) hRow.innerHTML += `<th>Room ${i+1}</th>`;
         thead.appendChild(hRow); table.appendChild(thead);
         
         // Body
         const tbody = document.createElement('tbody');
-        for(let r=0; r<roundCount; r++){
+        allRounds.forEach(rData => {
             const row = document.createElement('tr');
-            row.innerHTML = `<td style="font-weight:700;color:var(--muted)">Round ${r+1}</td>`;
-            currentResult.text += `[Round ${r+1}]\n`;
+            row.innerHTML = `<td style="font-weight:700;color:var(--muted)">Round ${rData.round}</td>`;
             
-            groups.forEach((members, gIdx) => {
-                const roleData = getRoles(members, r);
+            rData.rooms.forEach(room => {
                 const cell = document.createElement('td');
                 cell.className = 'matrix-cell';
                 if(fxMode==='storm') cell.classList.add('electrified', 'struck');
                 if(fxMode==='animal') cell.classList.add('festive');
-
-                // CSV Logic (Zoom Pre-assignment)
-                // Need to output for EVERY round? Zoom only takes one set. 
-                // Usually pre-assign is static. We use Room 1, Room 2...
-                // Only add to CSV once per person
-                if (r === 0) {
-                    members.forEach(m => {
-                        currentResult.csv += `Room ${gIdx+1},${m}\n`;
-                    });
-                }
-
-                // Display
-                const lineC = `<span class="role-line"><span class="role-badge rb-coach">コーチ</span>${roleData.coach}</span>`;
-                const lineCl = `<span class="role-line"><span class="role-badge rb-client">クライアント</span>${roleData.client}</span>`;
-                const lineOb = roleData.observers.map(o => `<span class="role-line"><span class="role-badge rb-obs">オブザーブ</span>${o}</span>`).join('');
+                
+                const lineC = `<span class="role-line"><span class="role-badge rb-coach">コーチ</span>${room.roles.coach}</span>`;
+                const lineCl = `<span class="role-line"><span class="role-badge rb-client">クライアント</span>${room.roles.client}</span>`;
+                const lineOb = room.roles.observers.map(o => `<span class="role-line"><span class="role-badge rb-obs">オブザーブ</span>${o}</span>`).join('');
                 
                 cell.innerHTML = lineC + lineCl + lineOb;
                 row.appendChild(cell);
-
-                // Text Logic
-                currentResult.text += `Room ${gIdx+1}: C=${roleData.coach} / Cl=${roleData.client} / Ob=${roleData.observers.join(',')}\n`;
             });
-            currentResult.text += "\n";
             tbody.appendChild(row);
-        }
+        });
         table.appendChild(tbody);
         container.appendChild(table);
         resultsEl.appendChild(container);
-        resultsEl.style.display = "block";
     }
 
     // Lucky Topic Update
@@ -729,7 +951,6 @@ function draw(){
     document.getElementById('redrawBtn').disabled = false;
     document.getElementById('copyBtn').disabled = false;
     if(isGroupMode) document.getElementById('copyCsvBtn').disabled = false;
-    currentResult.text += `\n⚡️ 問い: ${question}`;
   };
 
   if (fxMode === 'none') {
@@ -740,7 +961,6 @@ function draw(){
           SoundFX.thunder(); VisualFX.strike();
           document.body.classList.add('shaking');
           setTimeout(()=> document.body.classList.remove('shaking'), 500);
-          document.body.classList.remove('mode-storm'); // keep dark theme elements but remove body override if needed, actually let's keep it
       } else if(fxMode === 'animal'){
           SoundFX.stopRumble(); SoundFX.fanfare(); VisualFX.confetti();
       }
