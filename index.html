@@ -28,13 +28,43 @@ body{
 }
 
 /* --- モード別スタイル --- */
-/* Storm Mode */
-body.mode-storm { background: var(--storm-bg); color: #e5e7eb; }
-body.mode-storm .panel, body.mode-storm .role, body.mode-storm .matrix-cell, body.mode-storm .schedule-box { background: #1f2937; border-color: #374151; color: #f3f4f6; }
+/* Storm Mode (修正: 視認性向上のため変数を再定義し、LuckyBox等に対応) */
+body.mode-storm { 
+  background: var(--storm-bg); 
+  color: #f3f4f6; 
+  --card: #1f2937; /* アニメーション終了時の背景色用に変数を上書き */
+  --border: #374151;
+  --muted: #9ca3af;
+}
+body.mode-storm .panel, 
+body.mode-storm .role, 
+body.mode-storm .matrix-cell, 
+body.mode-storm .schedule-box { 
+  background: #1f2937; 
+  border-color: #374151; 
+  color: #f9fafb; 
+}
 body.mode-storm h1, body.mode-storm .logo { filter: brightness(0.8); }
 body.mode-storm textarea { background: #374151; color: #f3f4f6; border-color: #4b5563; }
 body.mode-storm .sch-row { border-bottom-color: #374151; }
 body.mode-storm .sch-row:hover { background: rgba(255,255,255,0.05); }
+
+/* Storm Mode - Lucky Box 追加修正 */
+body.mode-storm .lucky-box {
+  background: #1f2937;
+  border-color: #0ea5e9;
+  color: #f3f4f6;
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.15);
+}
+body.mode-storm .lucky-text {
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0,0,0,0.5);
+  font-weight: 500;
+}
+body.mode-storm .name {
+  color: #fff;
+  text-shadow: 0 0 1px rgba(0,0,0,0.5);
+}
 
 /* Animal Mode */
 body.mode-animal { background: var(--animal-bg); }
@@ -279,7 +309,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 <input type="radio" name="workType" value="C">
                 <div class="radio-tile">
                     <div class="radio-tile-head">型C：トリオ探求（3人/毎回シャッフル）</div>
-                    <div class="radio-tile-desc">ラウンドごとに3人組を作り直します。過去に組んだ相手と極力重複しないよう自動調整します。</div>
+                    <div class="radio-tile-desc">ラウンドごとに3人組を作り直します。過去に組んだ相手と重複せず、かつ役割も均等になるよう調整します。</div>
                 </div>
             </label>
             <label class="radio-tile-label">
@@ -622,10 +652,6 @@ function generateGroups(names, type) {
     }
 
     let ptr = 0;
-    // Create logic for Shuffle vs Fixed is handled outside, this just chunks the array
-    // We prioritize largest groups first usually, but for rendering consistency let's put irregulars at end
-    // Or maybe irregulars at start? Let's do standard chunks first.
-    
     // Actually, for better randomness, we just need the structure [3,3,3,4] etc.
     // Then we fill them.
     let structure = [];
@@ -633,7 +659,6 @@ function generateGroups(names, type) {
     if(counts.extra > 0) structure.push(baseSize + 1);
     if(counts.smaller > 0) structure.push(baseSize - 1);
     
-    // Structure now contains e.g. [3,3,3,4]
     return structure;
 }
 
@@ -674,39 +699,74 @@ function solveShuffle(names, structure, historyMatrix) {
     return bestGroups;
 }
 
-// Role Logic
-function getRoles(members, roundIdx, type) {
+// Fixed Role Logic (Type A/B)
+function getFixedRoles(members, roundIdx) {
     const n = members.length;
-    // Rotate logic for fixed groups (A/B), simple position for shuffled (C/D)
-    // If shuffled, we can just assign based on position since group is random.
-    // However, keeping consistent rotation logic is fine too.
-    
-    // C=Coach, Cl=Client, Ob=Observer
     let roles = { coach: '', client: '', observers: [] };
     
     if (n === 2) {
-        // Swap C/Cl
         if (roundIdx % 2 === 0) { roles.coach = members[0]; roles.client = members[1]; }
         else { roles.coach = members[1]; roles.client = members[0]; }
     } else if (n === 3) {
-        // Cyclic C->Cl->Ob->C
         const c = roundIdx % 3;
         const cl = (roundIdx + 1) % 3;
         roles.coach = members[c];
         roles.client = members[cl];
         roles.observers = members.filter((_, i) => i !== c && i !== cl);
     } else if (n === 4) {
-        // Special patterns to avoid consecutive observer if possible (same as before)
-        const patterns = [
-            {c:0, cl:1}, {c:2, cl:3}, {c:1, cl:2}, {c:3, cl:0}, {c:0, cl:2}
-        ];
+        const patterns = [{c:0, cl:1}, {c:2, cl:3}, {c:1, cl:2}, {c:3, cl:0}, {c:0, cl:2}];
         const pat = patterns[roundIdx % patterns.length];
         roles.coach = members[pat.c];
         roles.client = members[pat.cl];
         roles.observers = members.filter((_, i) => i !== pat.c && i !== pat.cl);
     }
-    
     return roles;
+}
+
+// Smart Role Logic (Type C/D) - Equalize & Rotation
+function assignSmartRoles(members, history) {
+    const getStats = (n) => history[n] || { c:0, cl:0, ob:0, last: null };
+
+    // 1. Decide Coach
+    // Sort criteria: coach count (asc) -> was coach last round (false < true) -> random
+    let sortedForCoach = [...members].sort((a,b) => {
+        const sa = getStats(a), sb = getStats(b);
+        if(sa.c !== sb.c) return sa.c - sb.c;
+        const aWasC = sa.last === 'Coach' ? 1 : 0;
+        const bWasC = sb.last === 'Coach' ? 1 : 0;
+        if(aWasC !== bWasC) return aWasC - bWasC;
+        return Math.random() - 0.5;
+    });
+    const coach = sortedForCoach[0];
+
+    // 2. Decide Client
+    let remaining = members.filter(n => n !== coach);
+    let sortedForClient = [...remaining].sort((a,b) => {
+        const sa = getStats(a), sb = getStats(b);
+        if(sa.cl !== sb.cl) return sa.cl - sb.cl; 
+        const aWasCl = sa.last === 'Client' ? 1 : 0;
+        const bWasCl = sb.last === 'Client' ? 1 : 0;
+        if(aWasCl !== bWasCl) return aWasCl - bWasCl;
+        return Math.random() - 0.5;
+    });
+    const client = sortedForClient[0];
+
+    // 3. Observers
+    const observers = members.filter(n => n !== coach && n !== client);
+
+    // Update History immediately
+    if(!history[coach]) history[coach] = {c:0, cl:0, ob:0, last:null};
+    history[coach].c++; history[coach].last = 'Coach';
+
+    if(!history[client]) history[client] = {c:0, cl:0, ob:0, last:null};
+    history[client].cl++; history[client].last = 'Client';
+
+    observers.forEach(o => {
+        if(!history[o]) history[o] = {c:0, cl:0, ob:0, last:null};
+        history[o].ob++; history[o].last = 'Observer';
+    });
+
+    return { coach, client, observers };
 }
 
 function draw(){
@@ -791,9 +851,13 @@ function draw(){
         const structure = generateGroups(names, workType);
         const isShuffle = (workType === 'C' || workType === 'D');
         
-        // History Matrix for duplication check
-        let historyMatrix = {};
-        names.forEach(n => historyMatrix[n] = {});
+        // History Matrices
+        let pairHistory = {}; // For duplicate avoidance
+        let roleHistory = {}; // For role balancing (New!)
+        names.forEach(n => {
+            pairHistory[n] = {};
+            roleHistory[n] = { c:0, cl:0, ob:0, last: null };
+        });
 
         // Data Container
         let allRounds = []; // [ {round:1, groups:[{members:[], roles:{}}]} ]
@@ -818,17 +882,17 @@ function draw(){
                 groupsForRound = fixedGroups; // Use same groups
             } else {
                 // Generate new groups with duplicate avoidance
-                groupsForRound = solveShuffle(names, structure, historyMatrix);
+                groupsForRound = solveShuffle(names, structure, pairHistory);
                 
-                // Update history
+                // Update pair history
                 groupsForRound.forEach(grp => {
                     for(let i=0; i<grp.length; i++){
                         for(let j=i+1; j<grp.length; j++){
                             let p1 = grp[i], p2 = grp[j];
-                            if(!historyMatrix[p1][p2]) historyMatrix[p1][p2] = 0;
-                            if(!historyMatrix[p2][p1]) historyMatrix[p2][p1] = 0;
-                            historyMatrix[p1][p2]++;
-                            historyMatrix[p2][p1]++;
+                            if(!pairHistory[p1][p2]) pairHistory[p1][p2] = 0;
+                            if(!pairHistory[p2][p1]) pairHistory[p2][p1] = 0;
+                            pairHistory[p1][p2]++;
+                            pairHistory[p2][p1]++;
                         }
                     }
                 });
@@ -841,7 +905,15 @@ function draw(){
             currentResult.csv += `[Round ${r+1}] Zoom Import Data (Copy lines below)\nPre-assign Room Name,Email Address\n`;
 
             groupsForRound.forEach((members, gIdx) => {
-                let roles = getRoles(members, r, workType);
+                let roles;
+                if (isShuffle) {
+                    // Use Smart Assignment (Balance & Rotation)
+                    roles = assignSmartRoles(members, roleHistory);
+                } else {
+                    // Use Fixed Rotation
+                    roles = getFixedRoles(members, r);
+                }
+
                 roundData.rooms.push({ roomNum: gIdx+1, members: members, roles: roles });
                 
                 // Update Personal Schedule
