@@ -11,10 +11,11 @@
   --accent:#3b82f6; --accent-2:#10b981; --card:#ffffff; 
   --shadow:0 10px 24px rgba(0,0,0,.06);
   
-  /* Storm Mode Colors */
-  --storm-bg: #111827;
-  --lightning: #e0f2fe;
-  --electric: #0ea5e9;
+  /* February Mode Colors (節分) */
+  --feb-bg: #fffbf0; /* 柔らかな和紙のような白 */
+  --feb-accent: #ef4444; /* 活気のある赤 */
+  --feb-sub: #f59e0b; /* 豆の黄金色 */
+  --feb-green: #10b981; /* 福茶の緑 */
 
   /* Animal Mode Colors */
   --animal-bg: #fff1f2; 
@@ -28,43 +29,27 @@ body{
 }
 
 /* --- モード別スタイル --- */
-/* Storm Mode (修正: 視認性向上のため変数を再定義し、LuckyBox等に対応) */
-body.mode-storm { 
-  background: var(--storm-bg); 
-  color: #f3f4f6; 
-  --card: #1f2937; /* アニメーション終了時の背景色用に変数を上書き */
-  --border: #374151;
-  --muted: #9ca3af;
+/* February Mode (節分) */
+body.mode-february { 
+  background: var(--feb-bg); 
+  color: #4b2c20; 
 }
-body.mode-storm .panel, 
-body.mode-storm .role, 
-body.mode-storm .matrix-cell, 
-body.mode-storm .schedule-box { 
-  background: #1f2937; 
-  border-color: #374151; 
-  color: #f9fafb; 
+body.mode-february .panel, 
+body.mode-february .role, 
+body.mode-february .matrix-cell, 
+body.mode-february .schedule-box { 
+  background: #ffffff; 
+  border-color: #fcd34d; 
+  color: #4b2c20; 
 }
-body.mode-storm h1, body.mode-storm .logo { filter: brightness(0.8); }
-body.mode-storm textarea { background: #374151; color: #f3f4f6; border-color: #4b5563; }
-body.mode-storm .sch-row { border-bottom-color: #374151; }
-body.mode-storm .sch-row:hover { background: rgba(255,255,255,0.05); }
-
-/* Storm Mode - Lucky Box 追加修正 */
-body.mode-storm .lucky-box {
-  background: #1f2937;
-  border-color: #0ea5e9;
-  color: #f3f4f6;
-  box-shadow: 0 0 15px rgba(14, 165, 233, 0.15);
+body.mode-february .lucky-box {
+  background: #fff;
+  border-color: var(--feb-accent);
+  color: #4b2c20;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
 }
-body.mode-storm .lucky-text {
-  color: #fff;
-  text-shadow: 0 0 2px rgba(0,0,0,0.5);
-  font-weight: 500;
-}
-body.mode-storm .name {
-  color: #fff;
-  text-shadow: 0 0 1px rgba(0,0,0,0.5);
-}
+body.mode-february .tab.active { color: var(--feb-accent); border-bottom-color: var(--feb-accent); }
+body.mode-february .primary { background: linear-gradient(135deg, var(--feb-accent), var(--feb-sub)); }
 
 /* Animal Mode */
 body.mode-animal { background: var(--animal-bg); }
@@ -170,9 +155,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .rb-client { background: #d1fae5; color: #065f46; }
 .rb-obs { background: #f3f4f6; color: #4b5563; }
 
-/* Storm Effect */
-.round.electrified, .matrix-cell.electrified { border-color: var(--electric); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); animation: pulseGlow 2s infinite alternate; }
-@keyframes pulseGlow { from{box-shadow:0 0 10px rgba(59,130,246,0.2);} to{box-shadow:0 0 25px rgba(59,130,246,0.6);} }
+/* February Effect */
+.round.feb-decorated, .matrix-cell.feb-decorated { border-color: var(--feb-accent); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); animation: popScale 0.4s ease-out; }
 
 /* Animal Effect */
 .round.festive, .matrix-cell.festive { border-color: #f472b6; box-shadow: 0 10px 30px rgba(244, 114, 182, 0.25); animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -189,7 +173,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* 名前決定時のフラッシュ */
 .role.struck, .matrix-cell.struck, .sch-row.struck { animation: strikeFlash 0.4s ease-out forwards; }
-@keyframes strikeFlash { 0% { background: #fff; filter: brightness(3); } 50% { background: #e0f2fe; } 100% { background: var(--card); } }
+@keyframes strikeFlash { 0% { background: #fff; filter: brightness(2); } 50% { background: #fffbeb; } 100% { background: var(--card); } }
 
 /* 動物アイコンアニメーション */
 .animal-icon {
@@ -202,6 +186,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 .tag{ min-width:94px; text-align:center; color:#fff; background:linear-gradient(135deg,var(--accent),#60a5fa); border-radius:999px; font-size:12px; font-weight:800; padding:4px 10px; }
+body.mode-february .tag { background: linear-gradient(135deg, var(--feb-accent), #f87171); }
 .name{ font-size:16px; font-weight:700; display:flex; align-items:center; }
 .placeholder{ color:var(--muted); font-weight:500; letter-spacing:.08em }
 
@@ -267,7 +252,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 <div class="container" aria-hidden="true" id="appRoot">
   <header>
-    <div class="logo" aria-hidden="true">⚡️</div>
+    <div class="logo" aria-hidden="true">👹</div>
     <div>
       <h1>Coaching スキルドリル</h1>
     </div>
@@ -275,7 +260,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   <section class="panel">
     <div class="tabs">
-        <div class="tab active" data-target="mode-normal">通常モード (3名)</div>
+        <div class="tab active" data-target="mode-normal">通常モード (3-4名)</div>
         <div class="tab" data-target="mode-group">グループモード (大人数)</div>
     </div>
 
@@ -285,6 +270,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
           <div class="field"><label>参加者1</label><input id="p1" type="text" placeholder="参加者1"></div>
           <div class="field"><label>参加者2</label><input id="p2" type="text" placeholder="参加者2"></div>
           <div class="field"><label>参加者3</label><input id="p3" type="text" placeholder="参加者3"></div>
+          <div class="field"><label>参加者4 (任意)</label><input id="p4" type="text" placeholder="参加者4"></div>
         </div>
     </div>
 
@@ -356,7 +342,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     <div class="fx-row">
       <span style="font-weight:700">演出モード:</span>
       <div class="radio-group">
-        <label><input type="radio" name="fxMode" value="storm" checked> ⚡️Storm</label>
+        <label><input type="radio" name="fxMode" value="february" checked> 👹February</label>
         <label><input type="radio" name="fxMode" value="animal"> 🐻Animal</label>
         <label><input type="radio" name="fxMode" value="none"> 🚫無効</label>
       </div>
@@ -431,7 +417,7 @@ const STORAGE_KEYS = {
 };
 
 let defaultSettings = {
-  m: 25, s: 0, chime: 3, fxMode: 'storm'
+  m: 25, s: 0, chime: 3, fxMode: 'february'
 };
 
 function loadSettings(){
@@ -487,14 +473,12 @@ const SoundFX = {
     if (!this.ctx) this.init(); if (!this.ctx) return; const now = this.ctx.currentTime;
     this.playTone(660, 'sine', 0.8, 0.15, now); this.playTone(550, 'sine', 1.2, 0.15, now + 0.6);
   },
-  startRumble: function() {
+  startBeanRattle: function() { // 豆が箱の中で鳴る音
     if (!this.ctx) return; this.stopRumble();
-    const noise = this.createNoiseBuffer(); const src = this.ctx.createBufferSource(); src.buffer = noise; src.loop = true;
-    const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 120;
-    const gain = this.ctx.createGain(); gain.gain.value = 0;
-    src.connect(filter).connect(gain).connect(this.ctx.destination); src.start();
-    gain.gain.linearRampToValueAtTime(0.5, this.ctx.currentTime + 2);
-    this.rumbleOsc = src; this.rumbleGain = gain;
+    const now = this.ctx.currentTime;
+    for(let i=0; i<10; i++) {
+        this.playTone(1200 + Math.random()*800, 'sine', 0.05, 0.02, now + i*0.2);
+    }
   },
   stopRumble: function() {
     if (this.rumbleOsc) {
@@ -502,17 +486,21 @@ const SoundFX = {
       this.rumbleOsc = null;
     }
   },
-  thunder: function() {
-    if (!this.ctx) return; this.stopRumble(); const t = this.ctx.currentTime;
-    const noise = this.createNoiseBuffer();
-    const src1 = this.ctx.createBufferSource(); src1.buffer = noise;
-    const filter1 = this.ctx.createBiquadFilter(); filter1.type = 'highpass'; filter1.frequency.value = 500;
-    const gain1 = this.ctx.createGain(); gain1.gain.setValueAtTime(0.8, t); gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-    src1.connect(filter1).connect(gain1).connect(this.ctx.destination); src1.start(t);
-    const src2 = this.ctx.createBufferSource(); src2.buffer = noise;
-    const filter2 = this.ctx.createBiquadFilter(); filter2.type = 'lowpass'; filter2.frequency.setValueAtTime(800, t); filter2.frequency.linearRampToValueAtTime(50, t + 1.5);
-    const gain2 = this.ctx.createGain(); gain2.gain.setValueAtTime(1.0, t); gain2.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
-    src2.connect(filter2).connect(gain2).connect(this.ctx.destination); src2.start(t);
+  mamemaki: function() { // 豆まきの音（パシッ、コロコロ）
+    if (!this.ctx) return; const t = this.ctx.currentTime;
+    // パシッ（投げる音）
+    this.playTone(200, 'square', 0.05, 0.1, t);
+    // コロコロ（落ちる音）
+    for(let i=0; i<5; i++){
+        this.playTone(1500 + i*100, 'sine', 0.1, 0.05, t + 0.1 + (i*0.05));
+    }
+  },
+  setsubunMelody: function() { // 華やかな和風旋律
+    if (!this.ctx) return; const t = this.ctx.currentTime;
+    const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // 陽旋法（和風）
+    notes.forEach((freq, i) => {
+        this.playTone(freq, 'triangle', 0.3, 0.1, t + (i*0.15));
+    });
   },
   fanfare: function() {
     if (!this.ctx) return; const t = this.ctx.currentTime;
@@ -532,17 +520,23 @@ const VisualFX = {
     }
   },
   resize: function() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
-  createBoltPath: function(x, y, len) {
-    const path = [{x, y}]; let currX = x, currY = y;
-    while(currY < this.canvas.height + 100) {
-      currX += (Math.random() - 0.5) * len * 2; currY += (Math.random() * len) + 10;
-      path.push({x: currX, y: currY}); if(Math.random() < 0.1) break;
-    } return path;
-  },
-  strike: function() {
-    this.elements.push({ type: 'screen', alpha: 0.9, decay: 0.08, color: '255,255,255' });
-    const startX = Math.random() * this.canvas.width;
-    this.elements.push({ type: 'bolt', path: this.createBoltPath(startX, -50, 30), alpha: 1, decay: 0.04, width: 3 });
+  mameRain: function() {
+    const colors = ['#fcd34d', '#fbbf24', '#f59e0b', '#ffffff']; // 豆の色
+    for(let i=0; i<60; i++){
+      this.elements.push({ 
+          type: 'bean', 
+          x: Math.random()*this.canvas.width, 
+          y: -20, 
+          vx: (Math.random()-0.5)*4, 
+          vy: Math.random()*10 + 5, 
+          color: colors[Math.floor(Math.random()*colors.length)], 
+          size: Math.random()*4 + 4, 
+          rot: Math.random()*Math.PI, 
+          vRot: (Math.random()-0.5)*0.2,
+          alpha: 1, 
+          decay: 0.005 + Math.random()*0.01 
+      });
+    }
   },
   confetti: function() {
     const colors = ['#f472b6', '#34d399', '#60a5fa', '#fbbf24', '#a78bfa'];
@@ -556,8 +550,19 @@ const VisualFX = {
     for(let i=this.elements.length-1; i>=0; i--){
       const el = this.elements[i]; el.alpha -= el.decay;
       if(el.alpha <= 0){ this.elements.splice(i, 1); continue; }
-      if(el.type === 'screen') { this.ctx.fillStyle = `rgba(${el.color},${el.alpha})`; this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height); }
-      else if(el.type === 'bolt') { this.ctx.beginPath(); this.ctx.strokeStyle = `rgba(255, 255, 255, ${el.alpha})`; this.ctx.shadowBlur = 15; this.ctx.shadowColor = '#0ea5e9'; this.ctx.lineWidth = el.width; if(el.path.length > 0) { this.ctx.moveTo(el.path[0].x, el.path[0].y); for(let p of el.path) this.ctx.lineTo(p.x, p.y); } this.ctx.stroke(); this.ctx.shadowBlur = 0; }
+      if(el.type === 'bean') {
+          el.x += el.vx; el.y += el.vy; el.rot += el.vRot;
+          this.ctx.save();
+          this.ctx.translate(el.x, el.y);
+          this.ctx.rotate(el.rot);
+          this.ctx.beginPath();
+          this.ctx.fillStyle = el.color;
+          this.ctx.globalAlpha = el.alpha;
+          this.ctx.ellipse(0, 0, el.size, el.size*0.7, 0, 0, Math.PI*2);
+          this.ctx.fill();
+          this.ctx.restore();
+          this.ctx.globalAlpha = 1;
+      }
       else if(el.type === 'dot') { el.x += el.vx; el.y += el.vy; el.vy += 0.5; this.ctx.beginPath(); this.ctx.fillStyle = el.color; this.ctx.globalAlpha = el.alpha; this.ctx.arc(el.x, el.y, el.size, 0, Math.PI*2); this.ctx.fill(); this.ctx.globalAlpha = 1; }
     }
   }
@@ -576,10 +581,11 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3');
+const p1 = document.getElementById('p1'), p2 = document.getElementById('p2'), p3 = document.getElementById('p3'), p4 = document.getElementById('p4');
 const resultsEl = document.getElementById('results'), luckyBox = document.getElementById('luckyBox'), luckyText = document.getElementById('luckyText');
 
 const ANIMALS = ['🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐵','🦊','🐱','🐶','🐸','🐹','🐰','🦄','🐔','🦦','🦖','🦒'];
+const FEB_ICONS = ['👹','福','✨','🍡','🌸','🫘','🎍'];
 const QUESTIONS = [
   "✨ もし何の制約もなかったら、本当は何をしたいですか？", "🚀 1年後、あなたは何を達成して祝杯をあげていますか？",
   "📖 もし今のあなたの人生が「本」だとしたら、今の章にどんなタイトルをつけますか？", "👴 80歳になったあなたが、今のあなたにアドバイスするとしたら？",
@@ -592,17 +598,9 @@ const QUESTIONS = [
   "🔥 もし今、積み上げてきたものを一度壊して作り直すとしたら、どこから手をつけますか？", "🌪️ 嵐が過ぎ去った後、あなたの手元に残る「本当に大切なもの」は何ですか？",
   "😈 正直なところ、その目標は「誰かにちやほやされたい」という下心が何％ありますか？", "🏷️ あなたが今、商品棚に並んでいるとしたら、背中にはどんな「取扱注意」のラベルが貼ってありますか？",
   "🤥 「忙しい」と言い訳しているけれど、本当は「やりたくないだけ」のことは何ですか？", "🕶️ もし、あなたの苦手な人が今のあなたのアドバイザーになったら、どんな嫌味な正論を言ってくると思いますか？",
-  "🚮 あなたが抱えているプライドの中で、今すぐ捨てても誰も困らない「粗大ゴミ」はどれですか？", "🍛 「いつかやります」と言い続けて、そろそろ賞味期限が切れかかっている夢はありませんか？",
-  "🛑 アクセルを全開に踏みながら、同時に「怖い」と言ってブレーキを踏んでいる理由はなんですか？", "🌵 誰も見ていないし、誰にも褒められないとしても、あなたはその努力を続けられますか？",
-  "🤐 墓場まで持っていくと決めているけれど、本当はここで吐き出してしまいたい「弱音」はありますか？", "💊 その悩みにつける「特効薬」を発明しました。薬の名前と、ちょっとした副作用は何ですか？",
-  "🧱 あなたが自分で自分の周りに積み上げてしまった「壁」、内側から壊すなら何を使いますか？", "👽 もし宇宙人が今のあなたを見ていたら、母星へのレポートに何と書くでしょうか？",
-  "👟 あなたの「靴」が喋りだしました。「おい、もっと〇〇へ連れて行ってくれよ！」どこに行きたがっていますか？",
-  "🤖 AIロボットがあなたの「取扱説明書」を作りました。一番最初の「注意書き」には何と書いてありますか？",
-  "🐈 もしあなたが「気まぐれなネコ」だったら、今の悩みに対してどう反応しますか？（寝る？ひっかく？無視？）",
-  "🍛 今のあなたの精神状態を「カレーの辛さ」で表すと？（甘口？激辛？コクが足りない？）",
+  "🚮 あなたが抱えているプライドの中で、今すぐ捨てても誰も困らない「粗大ゴミ」はどれですか？", "カレーの辛さ」で表すと？（甘口？激辛？コクが足りない？）",
   "🤴 あなたが「地球の王様」になりました。最初に作る、私利私欲にまみれた法律は？", "🧙‍♂️ 魔法の杖で、今の状況を「動物」に変えるとしたら、どんな動物になりますか？",
-  "🧊 冷蔵庫の奥で忘れ去られている「保冷剤」の気持ちになって、今の一言をお願いします。", "👻 もし、あなたの苦手な人が今のあなたのアドバイザーになったら、どんな嫌味な正論を言ってくると思いますか？",
-  "🔥 あなたが今、密かに「あいつには負けたくない」と嫉妬している相手は誰ですか？", "🤡 あなたの人生を「B級映画」にするなら、ポスターのキャッチコピーは何にしますか？"
+  "🧊 冷蔵庫の奥で忘れ去られている「保冷剤」の気持ちになって、今の一言をお願いします。", "🔥 あなたが今、密かに「あいつには負けたくない」と嫉妬している相手は誰ですか？"
 ];
 
 // 状態管理
@@ -622,150 +620,94 @@ function generateGroups(names, type) {
     const n = names.length;
     let baseSize = (type === 'A' || type === 'C') ? 3 : 2;
     let groups = [];
-    
-    // Remainder handling
     const remainder = n % baseSize;
     let counts = { base: 0, extra: 0, smaller: 0 };
-    
     if (baseSize === 2) {
-        // Pair logic (Type B/D)
-        if (remainder === 0) {
-            counts.base = n / 2;
-        } else {
-            // Remainder 1 -> One group of 3
-            counts.extra = 1; 
-            counts.base = (n - 3) / 2;
-        }
+        if (remainder === 0) { counts.base = n / 2; } 
+        else { counts.extra = 1; counts.base = (n - 3) / 2; }
     } else {
-        // Trio logic (Type A/C)
-        if (remainder === 0) {
-            counts.base = n / 3;
-        } else if (remainder === 1) {
-            // Remainder 1 -> One group of 4
-            counts.extra = 1;
-            counts.base = (n - 4) / 3;
-        } else if (remainder === 2) {
-            // Remainder 2 -> One group of 2
-            counts.smaller = 1;
-            counts.base = (n - 2) / 3;
-        }
+        if (remainder === 0) { counts.base = n / 3; } 
+        else if (remainder === 1) { counts.extra = 1; counts.base = (n - 4) / 3; } 
+        else if (remainder === 2) { counts.smaller = 1; counts.base = (n - 2) / 3; }
     }
-
-    let ptr = 0;
-    // Actually, for better randomness, we just need the structure [3,3,3,4] etc.
-    // Then we fill them.
     let structure = [];
     for(let i=0; i<counts.base; i++) structure.push(baseSize);
     if(counts.extra > 0) structure.push(baseSize + 1);
     if(counts.smaller > 0) structure.push(baseSize - 1);
-    
     return structure;
 }
 
 function solveShuffle(names, structure, historyMatrix) {
-    // Attempt to fill structure with names such that duplicates in history are minimized
-    // Simple Randomized Greedy with Retries
     let bestGroups = null;
     let minCost = Infinity;
-
     for (let attempt = 0; attempt < 50; attempt++) {
         let currentShuffled = shuffle([...names]);
         let ptr = 0;
         let currentGroups = [];
         let cost = 0;
-
         for (let size of structure) {
             let grp = currentShuffled.slice(ptr, ptr + size);
             ptr += size;
             currentGroups.push(grp);
-            
-            // Calculate cost (how many pairs have met)
             for (let i = 0; i < grp.length; i++) {
                 for (let j = i + 1; j < grp.length; j++) {
                     let p1 = grp[i], p2 = grp[j];
-                    if (historyMatrix[p1] && historyMatrix[p1][p2]) {
-                        cost += historyMatrix[p1][p2];
-                    }
+                    if (historyMatrix[p1] && historyMatrix[p1][p2]) { cost += historyMatrix[p1][p2]; }
                 }
             }
         }
-
-        if (cost < minCost) {
-            minCost = cost;
-            bestGroups = currentGroups;
-            if (cost === 0) break; // Perfect found
-        }
+        if (cost < minCost) { minCost = cost; bestGroups = currentGroups; if (cost === 0) break; }
     }
     return bestGroups;
 }
 
-// Fixed Role Logic (Type A/B)
 function getFixedRoles(members, roundIdx) {
     const n = members.length;
     let roles = { coach: '', client: '', observers: [] };
-    
     if (n === 2) {
         if (roundIdx % 2 === 0) { roles.coach = members[0]; roles.client = members[1]; }
         else { roles.coach = members[1]; roles.client = members[0]; }
     } else if (n === 3) {
-        const c = roundIdx % 3;
-        const cl = (roundIdx + 1) % 3;
-        roles.coach = members[c];
-        roles.client = members[cl];
+        const c = roundIdx % 3; const cl = (roundIdx + 1) % 3;
+        roles.coach = members[c]; roles.client = members[cl];
         roles.observers = members.filter((_, i) => i !== c && i !== cl);
     } else if (n === 4) {
         const patterns = [{c:0, cl:1}, {c:2, cl:3}, {c:1, cl:2}, {c:3, cl:0}, {c:0, cl:2}];
         const pat = patterns[roundIdx % patterns.length];
-        roles.coach = members[pat.c];
-        roles.client = members[pat.cl];
+        roles.coach = members[pat.c]; roles.client = members[pat.cl];
         roles.observers = members.filter((_, i) => i !== pat.c && i !== pat.cl);
     }
     return roles;
 }
 
-// Smart Role Logic (Type C/D) - Equalize & Rotation
 function assignSmartRoles(members, history) {
     const getStats = (n) => history[n] || { c:0, cl:0, ob:0, last: null };
-
-    // 1. Decide Coach
-    // Sort criteria: coach count (asc) -> was coach last round (false < true) -> random
     let sortedForCoach = [...members].sort((a,b) => {
         const sa = getStats(a), sb = getStats(b);
         if(sa.c !== sb.c) return sa.c - sb.c;
         const aWasC = sa.last === 'Coach' ? 1 : 0;
         const bWasC = sb.last === 'Coach' ? 1 : 0;
-        if(aWasC !== bWasC) return aWasC - bWasC;
-        return Math.random() - 0.5;
+        return (aWasC !== bWasC) ? aWasC - bWasC : Math.random() - 0.5;
     });
     const coach = sortedForCoach[0];
-
-    // 2. Decide Client
     let remaining = members.filter(n => n !== coach);
     let sortedForClient = [...remaining].sort((a,b) => {
         const sa = getStats(a), sb = getStats(b);
         if(sa.cl !== sb.cl) return sa.cl - sb.cl; 
         const aWasCl = sa.last === 'Client' ? 1 : 0;
         const bWasCl = sb.last === 'Client' ? 1 : 0;
-        if(aWasCl !== bWasCl) return aWasCl - bWasCl;
-        return Math.random() - 0.5;
+        return (aWasCl !== bWasCl) ? aWasCl - bWasCl : Math.random() - 0.5;
     });
     const client = sortedForClient[0];
-
-    // 3. Observers
     const observers = members.filter(n => n !== coach && n !== client);
-
-    // Update History immediately
     if(!history[coach]) history[coach] = {c:0, cl:0, ob:0, last:null};
     history[coach].c++; history[coach].last = 'Coach';
-
     if(!history[client]) history[client] = {c:0, cl:0, ob:0, last:null};
     history[client].cl++; history[client].last = 'Client';
-
     observers.forEach(o => {
         if(!history[o]) history[o] = {c:0, cl:0, ob:0, last:null};
         history[o].ob++; history[o].last = 'Observer';
     });
-
     return { coach, client, observers };
 }
 
@@ -773,252 +715,175 @@ function draw(){
   const isGroupMode = document.getElementById('mode-group').classList.contains('active');
   const fxMode = document.querySelector('input[name="fxMode"]:checked').value;
   localStorage.setItem(STORAGE_KEYS.FX_MODE, fxMode);
-
-  // Clear previous
   resultsEl.innerHTML = "";
   luckyBox.classList.remove('show');
   
-  // Get Participants
   let names = [];
-  if (isGroupMode) {
-      names = document.getElementById('bulkParticipants').value.split(/\r\n|\n|\r/).map(n=>n.trim()).filter(n=>n);
-  } else {
-      names = [p1.value, p2.value, p3.value].map(n=>n.trim()).filter(n=>n);
-  }
-
+  if (isGroupMode) { names = document.getElementById('bulkParticipants').value.split(/\r\n|\n|\r/).map(n=>n.trim()).filter(n=>n); } 
+  else { names = [p1.value, p2.value, p3.value, p4.value].map(n=>n.trim()).filter(n=>n); }
   if (names.length < 2) { alert("2名以上入力してください"); return; }
   
-  // FX Setup
-  if(fxMode === 'storm'){
-      document.body.classList.remove('mode-animal'); document.body.classList.add('mode-storm'); SoundFX.startRumble();
+  if(fxMode === 'february'){
+      document.body.classList.remove('mode-animal'); document.body.classList.add('mode-february'); SoundFX.startBeanRattle();
   } else if(fxMode === 'animal'){
-      document.body.classList.remove('mode-storm'); document.body.classList.add('mode-animal'); SoundFX.startRumble();
+      document.body.classList.remove('mode-february'); document.body.classList.add('mode-animal'); SoundFX.startRumble();
   } else {
-      document.body.classList.remove('mode-storm', 'mode-animal');
+      document.body.classList.remove('mode-february', 'mode-animal');
   }
 
   const question = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
-  const luckyAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+  const luckyIcon = (fxMode === 'february') ? FEB_ICONS[Math.floor(Math.random() * FEB_ICONS.length)] : ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
 
-  // --- RENDERING LOGIC ---
   const renderResults = () => {
     resultsEl.innerHTML = "";
-    currentResult = { text: '', csv: '' }; // Reset CSV
-    let personalSchedule = {}; // Key: Name, Val: String of flow
+    currentResult = { text: '', csv: '' };
+    let personalSchedule = {};
     names.forEach(n => personalSchedule[n] = []);
 
     if (!isGroupMode) {
-        // Normal Mode (Original Logic)
         const shuffled = shuffle([...names]);
-        const rolesList = shuffled.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
-        currentResult.csv = 'Pre-assign Room Name,Email Address\n'; // Normal mode simple CSV
-        
-        currentResult.text += `■ 参加者: ${shuffled.join(', ')}\n\n`;
-
-        for(let i=0; i<shuffled.length; i++){
-            const card = document.createElement('div'); card.className = 'round';
-            if(fxMode==='storm') card.classList.add('electrified');
-            if(fxMode==='animal') card.classList.add('festive');
-
-            card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
-            const list = card.querySelector('.assign');
-            
-            rolesList.forEach((roleTag, roleIdx) => {
-                const pName = shuffled[(i + roleIdx) % shuffled.length];
-                const row = document.createElement('div'); row.className = 'role';
-                if(fxMode==='storm') row.classList.add('struck');
-                
-                let dispName = pName;
-                if(fxMode === 'animal'){
-                    const ani = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-                    dispName = `<span class="animal-icon">${ani}</span> ${pName}`;
-                }
-                row.innerHTML = `<div class="tag">${roleTag}</div><div class="name">${dispName}</div>`;
-                list.appendChild(row);
-
-                // Build text for clipboard
-                if(roleIdx === 0) currentResult.text += `[第${i+1}回]\n`;
-                currentResult.text += `- ${roleTag}: ${pName}\n`;
-            });
-            currentResult.text += "\n";
-            resultsEl.appendChild(card);
+        currentResult.csv = 'Pre-assign Room Name,Email Address\n'; 
+        if (shuffled.length === 4) {
+             currentResult.text += `■ 参加者: ${shuffled.join(', ')} (4名仕様)\n\n`;
+             const patterns = [{c:0, cl:1, obs:[2,3]}, {c:2, cl:3, obs:[0,1]}, {c:1, cl:2, obs:[0,3]}, {c:3, cl:0, obs:[1,2]}];
+             patterns.forEach((pat, i) => {
+                 const card = document.createElement('div'); card.className = 'round';
+                 if(fxMode==='february') card.classList.add('feb-decorated');
+                 if(fxMode==='animal') card.classList.add('festive');
+                 card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
+                 const list = card.querySelector('.assign');
+                 const addRoleRow = (roleName, pIndex) => {
+                     const pName = shuffled[pIndex];
+                     const row = document.createElement('div'); row.className = 'role';
+                     if(fxMode==='february') row.classList.add('struck');
+                     let dispName = pName;
+                     if(fxMode === 'animal' || fxMode === 'february'){
+                        const iconSet = (fxMode === 'february') ? FEB_ICONS : ANIMALS;
+                        const icon = iconSet[Math.floor(Math.random() * iconSet.length)];
+                        dispName = `<span class="animal-icon">${icon}</span> ${pName}`;
+                     }
+                     row.innerHTML = `<div class="tag">${roleName}</div><div class="name">${dispName}</div>`;
+                     list.appendChild(row);
+                     return pName;
+                 };
+                 currentResult.text += `[第${i+1}回]\n`;
+                 currentResult.text += `- コーチ: ${addRoleRow("コーチ", pat.c)}\n`;
+                 currentResult.text += `- クライアント: ${addRoleRow("クライアント", pat.cl)}\n`;
+                 pat.obs.forEach(idx => { currentResult.text += `- オブザーバー: ${addRoleRow("オブザーバー", idx)}\n`; });
+                 currentResult.text += "\n";
+                 resultsEl.appendChild(card);
+             });
+        } else {
+            const rolesList = shuffled.length === 2 ? ["コーチ", "クライアント"] : ["コーチ", "クライアント", "オブザーバー"];
+            currentResult.text += `■ 参加者: ${shuffled.join(', ')}\n\n`;
+            for(let i=0; i<shuffled.length; i++){
+                const card = document.createElement('div'); card.className = 'round';
+                if(fxMode==='february') card.classList.add('feb-decorated');
+                if(fxMode==='animal') card.classList.add('festive');
+                card.innerHTML = `<h3><span class="badge">第${i+1}回</span> 割り当て</h3><div class="assign"></div>`;
+                const list = card.querySelector('.assign');
+                rolesList.forEach((roleTag, roleIdx) => {
+                    const pName = shuffled[(i + roleIdx) % shuffled.length];
+                    const row = document.createElement('div'); row.className = 'role';
+                    if(fxMode==='february') row.classList.add('struck');
+                    let dispName = pName;
+                    if(fxMode === 'animal' || fxMode === 'february'){
+                        const iconSet = (fxMode === 'february') ? FEB_ICONS : ANIMALS;
+                        const icon = iconSet[Math.floor(Math.random() * iconSet.length)];
+                        dispName = `<span class="animal-icon">${icon}</span> ${pName}`;
+                    }
+                    row.innerHTML = `<div class="tag">${roleTag}</div><div class="name">${dispName}</div>`;
+                    list.appendChild(row);
+                    if(roleIdx === 0) currentResult.text += `[第${i+1}回]\n`;
+                    currentResult.text += `- ${roleTag}: ${pName}\n`;
+                });
+                currentResult.text += "\n";
+                resultsEl.appendChild(card);
+            }
         }
-
     } else {
-        // Group Mode Logic
         const workType = document.querySelector('input[name="workType"]:checked').value;
         const roundCount = parseInt(document.getElementById('roundCount').value);
         const structure = generateGroups(names, workType);
         const isShuffle = (workType === 'C' || workType === 'D');
-        
-        // History Matrices
-        let pairHistory = {}; // For duplicate avoidance
-        let roleHistory = {}; // For role balancing (New!)
-        names.forEach(n => {
-            pairHistory[n] = {};
-            roleHistory[n] = { c:0, cl:0, ob:0, last: null };
-        });
-
-        // Data Container
-        let allRounds = []; // [ {round:1, groups:[{members:[], roles:{}}]} ]
-
-        // Generate Rounds
-        let fixedGroups = null;
+        let pairHistory = {}; let roleHistory = {};
+        names.forEach(n => { pairHistory[n] = {}; roleHistory[n] = { c:0, cl:0, ob:0, last: null }; });
+        let allRounds = []; let fixedGroups = null;
         if (!isShuffle) {
-            // Fixed: shuffle once, then split
-            let shuffledNames = shuffle([...names]);
-            fixedGroups = [];
-            let ptr = 0;
-            structure.forEach(size => {
-                fixedGroups.push(shuffledNames.slice(ptr, ptr+size));
-                ptr+=size;
-            });
+            let shuffledNames = shuffle([...names]); fixedGroups = []; let ptr = 0;
+            structure.forEach(size => { fixedGroups.push(shuffledNames.slice(ptr, ptr+size)); ptr+=size; });
         }
-
         for (let r=0; r<roundCount; r++) {
-            let groupsForRound = [];
-            
-            if (!isShuffle) {
-                groupsForRound = fixedGroups; // Use same groups
-            } else {
-                // Generate new groups with duplicate avoidance
-                groupsForRound = solveShuffle(names, structure, pairHistory);
-                
-                // Update pair history
+            let groupsForRound = isShuffle ? solveShuffle(names, structure, pairHistory) : fixedGroups;
+            if (isShuffle) {
                 groupsForRound.forEach(grp => {
                     for(let i=0; i<grp.length; i++){
                         for(let j=i+1; j<grp.length; j++){
                             let p1 = grp[i], p2 = grp[j];
                             if(!pairHistory[p1][p2]) pairHistory[p1][p2] = 0;
                             if(!pairHistory[p2][p1]) pairHistory[p2][p1] = 0;
-                            pairHistory[p1][p2]++;
-                            pairHistory[p2][p1]++;
+                            pairHistory[p1][p2]++; pairHistory[p2][p1]++;
                         }
                     }
                 });
             }
-
             let roundData = { round: r+1, rooms: [] };
-            
-            // CSV Header for this round
-            if (r > 0) currentResult.csv += `\n`; // Spacer
-            currentResult.csv += `[Round ${r+1}] Zoom Import Data (Copy lines below)\nPre-assign Room Name,Email Address\n`;
-
+            if (r > 0) currentResult.csv += `\n`;
+            currentResult.csv += `[Round ${r+1}] Zoom Import Data\nPre-assign Room Name,Email Address\n`;
             groupsForRound.forEach((members, gIdx) => {
-                let roles;
-                if (isShuffle) {
-                    // Use Smart Assignment (Balance & Rotation)
-                    roles = assignSmartRoles(members, roleHistory);
-                } else {
-                    // Use Fixed Rotation
-                    roles = getFixedRoles(members, r);
-                }
-
+                let roles = isShuffle ? assignSmartRoles(members, roleHistory) : getFixedRoles(members, r);
                 roundData.rooms.push({ roomNum: gIdx+1, members: members, roles: roles });
-                
-                // Update Personal Schedule
-                // Helper to find role
                 members.forEach(m => {
-                    let rStr = 'Ob';
-                    if(roles.coach === m) rStr = 'Coach';
-                    else if(roles.client === m) rStr = 'Client';
-                    
-                    personalSchedule[m].push({
-                        round: r+1,
-                        room: gIdx+1,
-                        role: rStr
-                    });
-                });
-
-                // Append to CSV for this round
-                members.forEach(m => {
+                    let rStr = (roles.coach === m) ? 'Coach' : (roles.client === m ? 'Client' : 'Ob');
+                    personalSchedule[m].push({ round: r+1, room: gIdx+1, role: rStr });
                     currentResult.csv += `Room ${gIdx+1},${m}\n`;
                 });
             });
             allRounds.push(roundData);
         }
-
-        // --- Render 1: Personal Schedule (New!) ---
-        const scheduleBox = document.createElement('div');
-        scheduleBox.className = 'schedule-box';
-        scheduleBox.style.gridColumn = "1 / -1"; // Force vertical stack
+        const scheduleBox = document.createElement('div'); scheduleBox.className = 'schedule-box'; scheduleBox.style.gridColumn = "1 / -1";
         scheduleBox.innerHTML = `<div class="schedule-header">📋 個人スケジュール（ここがコピーされます）</div><div class="schedule-content"></div>`;
         const schContent = scheduleBox.querySelector('.schedule-content');
-        
         let copyTextBuffer = "";
-        
         names.sort().forEach(name => {
-            const row = document.createElement('div');
-            row.className = 'sch-row';
-            if(fxMode==='storm') row.classList.add('struck');
-            
-            let flowHtml = '';
-            let flowText = '';
-            
+            const row = document.createElement('div'); row.className = 'sch-row';
+            if(fxMode==='february') row.classList.add('struck');
+            let flowHtml = ''; let flowText = '';
             personalSchedule[name].forEach((step, i) => {
-                if(i > 0) {
-                    flowHtml += `<span class="step-arrow">➜</span>`;
-                    flowText += ` → `;
-                }
-                // Shorten Role for display
+                if(i > 0) { flowHtml += `<span class="step-arrow">➜</span>`; flowText += ` → `; }
                 let rShort = step.role === 'Coach' ? 'C' : (step.role === 'Client' ? 'Cl' : 'Ob');
-                
                 flowHtml += `<div class="flow-step"><span>R${step.round}:Room${step.room}</span><strong style="font-size:11px">${rShort}</strong></div>`;
                 flowText += `R${step.round}:Room${step.room}(${rShort})`;
             });
-            
             row.innerHTML = `<div class="sch-name">${name}</div><div class="sch-flow">${flowHtml}</div>`;
             schContent.appendChild(row);
-            
             copyTextBuffer += `■ ${name}: ${flowText}\n`;
         });
         resultsEl.appendChild(scheduleBox);
         currentResult.text = copyTextBuffer + `\n⚡️ 問い: ${question}`;
-
-        // --- Render 2: Master Matrix ---
-        const container = document.createElement('div'); container.className = 'matrix-container';
-        container.style.gridColumn = "1 / -1"; // Force vertical stack
+        const container = document.createElement('div'); container.className = 'matrix-container'; container.style.gridColumn = "1 / -1";
         const table = document.createElement('table'); table.className = 'matrix';
-        
-        // Header
-        const thead = document.createElement('thead');
-        const hRow = document.createElement('tr');
-        hRow.innerHTML = `<th>Round</th>`;
-        // Max rooms
-        const maxRooms = allRounds[0].rooms.length;
-        for(let i=0; i<maxRooms; i++) hRow.innerHTML += `<th>Room ${i+1}</th>`;
+        const thead = document.createElement('thead'); const hRow = document.createElement('tr'); hRow.innerHTML = `<th>Round</th>`;
+        for(let i=0; i<allRounds[0].rooms.length; i++) hRow.innerHTML += `<th>Room ${i+1}</th>`;
         thead.appendChild(hRow); table.appendChild(thead);
-        
-        // Body
         const tbody = document.createElement('tbody');
         allRounds.forEach(rData => {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td style="font-weight:700;color:var(--muted)">Round ${rData.round}</td>`;
-            
+            const row = document.createElement('tr'); row.innerHTML = `<td style="font-weight:700;color:var(--muted)">Round ${rData.round}</td>`;
             rData.rooms.forEach(room => {
-                const cell = document.createElement('td');
-                cell.className = 'matrix-cell';
-                if(fxMode==='storm') cell.classList.add('electrified', 'struck');
+                const cell = document.createElement('td'); cell.className = 'matrix-cell';
+                if(fxMode==='february') cell.classList.add('feb-decorated', 'struck');
                 if(fxMode==='animal') cell.classList.add('festive');
-                
-                const lineC = `<span class="role-line"><span class="role-badge rb-coach">コーチ</span>${room.roles.coach}</span>`;
-                const lineCl = `<span class="role-line"><span class="role-badge rb-client">クライアント</span>${room.roles.client}</span>`;
-                const lineOb = room.roles.observers.map(o => `<span class="role-line"><span class="role-badge rb-obs">オブザーブ</span>${o}</span>`).join('');
-                
-                cell.innerHTML = lineC + lineCl + lineOb;
+                cell.innerHTML = `<span class="role-line"><span class="role-badge rb-coach">コーチ</span>${room.roles.coach}</span>` +
+                                 `<span class="role-line"><span class="role-badge rb-client">クライアント</span>${room.roles.client}</span>` +
+                                 room.roles.observers.map(o => `<span class="role-line"><span class="role-badge rb-obs">オブザーブ</span>${o}</span>`).join('');
                 row.appendChild(cell);
             });
             tbody.appendChild(row);
         });
-        table.appendChild(tbody);
-        container.appendChild(table);
-        resultsEl.appendChild(container);
+        table.appendChild(tbody); container.appendChild(table); resultsEl.appendChild(container);
     }
-
-    // Lucky Topic Update
-    if(fxMode === 'animal') luckyText.innerHTML = `<span style="font-size:24px;display:block;margin-bottom:4px;">${luckyAnimal}</span> ${question}`;
+    if(fxMode === 'february' || fxMode === 'animal') luckyText.innerHTML = `<span style="font-size:24px;display:block;margin-bottom:4px;">${luckyIcon}</span> ${question}`;
     else luckyText.textContent = question;
-    
     luckyBox.classList.add('show');
     document.getElementById('redrawBtn').disabled = false;
     document.getElementById('copyBtn').disabled = false;
@@ -1029,8 +894,8 @@ function draw(){
     renderResults();
   } else {
     setTimeout(() => {
-      if(fxMode === 'storm'){
-          SoundFX.thunder(); VisualFX.strike();
+      if(fxMode === 'february'){
+          SoundFX.mamemaki(); VisualFX.mameRain(); SoundFX.setsubunMelody();
           document.body.classList.add('shaking');
           setTimeout(()=> document.body.classList.remove('shaking'), 500);
       } else if(fxMode === 'animal'){
@@ -1047,14 +912,15 @@ document.getElementById('copyBtn').addEventListener('click', () => {
     navigator.clipboard.writeText(currentResult.text).then(()=>alert("結果をコピーしました"));
 });
 document.getElementById('copyCsvBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(currentResult.csv).then(()=>alert("Zoom用CSV形式でコピーしました\n（Zoom設定画面でインポートできます）"));
+    navigator.clipboard.writeText(currentResult.csv).then(()=>alert("Zoom用CSV形式でコピーしました"));
 });
 
 document.querySelectorAll('input[name="fxMode"]').forEach(r => {
     r.addEventListener('change', () => {
         SoundFX.click();
-        if(r.value === 'animal') document.body.classList.add('mode-animal');
-        else document.body.classList.remove('mode-animal');
+        if(r.value === 'animal') { document.body.classList.add('mode-animal'); document.body.classList.remove('mode-february'); }
+        else if(r.value === 'february') { document.body.classList.add('mode-february'); document.body.classList.remove('mode-animal'); }
+        else { document.body.classList.remove('mode-animal', 'mode-february'); }
     });
 });
 
@@ -1087,7 +953,8 @@ function checkAlarms(remaining) {
   if (remaining <= 0) {
     stopTimer(); timeEl.classList.add('ended'); endMsgEl.textContent = "⚡️ TIME'S UP!"; endMsgEl.classList.add('show'); window.timerGlobal.isEnded = true;
     const mode = document.querySelector('input[name="fxMode"]:checked').value;
-    if(mode === 'storm') { SoundFX.thunder(); VisualFX.strike(); } else if(mode === 'animal') { SoundFX.fanfare(); VisualFX.confetti(); } else { SoundFX.chime(); }
+    if(mode === 'february') { SoundFX.mamemaki(); VisualFX.mameRain(); SoundFX.setsubunMelody(); } 
+    else if(mode === 'animal') { SoundFX.fanfare(); VisualFX.confetti(); } else { SoundFX.chime(); }
   }
 }
 function tick() {
@@ -1111,8 +978,7 @@ resetTimerState();
 startBtn.addEventListener('click', () => {
   if (window.timerGlobal.isRunning) { stopTimer(); startBtn.textContent = "再開"; } else {
     if (window.timerGlobal.isEnded || timeEl.textContent === "00:00") {
-      const parts = timeEl.textContent.split(':');
-      if(parts[0]=="00" && parts[1]=="00") { window.timerGlobal.endTime = Date.now() + window.timerGlobal.totalMs; chimeFired = false; timeEl.classList.remove('ended'); endMsgEl.classList.remove('show'); window.timerGlobal.isEnded = false; }
+      if(timeEl.textContent === "00:00") { window.timerGlobal.endTime = Date.now() + window.timerGlobal.totalMs; chimeFired = false; timeEl.classList.remove('ended'); endMsgEl.classList.remove('show'); window.timerGlobal.isEnded = false; }
     } else { const parts = timeEl.textContent.split(':'); const currentMs = (parseInt(parts[0])*60 + parseInt(parts[1])) * 1000; window.timerGlobal.endTime = Date.now() + currentMs; }
     window.timerGlobal.isRunning = true; startBtn.textContent = "一時停止"; SoundFX.init(); tick();
   }
