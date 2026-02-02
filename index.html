@@ -480,6 +480,15 @@ const SoundFX = {
         this.playTone(1200 + Math.random()*800, 'sine', 0.05, 0.02, now + i*0.2);
     }
   },
+  startRumble: function() { // ドラムロール風ノイズ（Animal Mode用）
+    if (!this.ctx) return; this.stopRumble();
+    const noise = this.createNoiseBuffer(); const src = this.ctx.createBufferSource(); src.buffer = noise; src.loop = true;
+    const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 120;
+    const gain = this.ctx.createGain(); gain.gain.value = 0;
+    src.connect(filter).connect(gain).connect(this.ctx.destination); src.start();
+    gain.gain.linearRampToValueAtTime(0.5, this.ctx.currentTime + 2);
+    this.rumbleOsc = src; this.rumbleGain = gain;
+  },
   stopRumble: function() {
     if (this.rumbleOsc) {
       try { this.rumbleGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5); this.rumbleOsc.stop(this.ctx.currentTime + 0.5); } catch(e){}
